@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מערכים ב-C# — תרגול עם הדמיה</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect x='4' y='20' width='18' height='24' fill='%23fff' stroke='%231B2A4A' stroke-width='4'/><rect x='23' y='20' width='18' height='24' fill='%23FFD84D' stroke='%231B2A4A' stroke-width='4'/><rect x='42' y='20' width='18' height='24' fill='%23fff' stroke='%231B2A4A' stroke-width='4'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<style>
+:root {
+  --ink: #1B2A4A;
+  --ink-2: #4A5A78;
+  --ink-3: #8592AA;
+  --paper: #F6F8FB;
+  --grid: #DFE6F0;
+  --line: #CBD5E3;
+  --white: #FFFFFF;
+  --pen: #2D55C8;
+  --pen-dark: #2246A8;
+  --marker: #FFD84D;
+  --marker-soft: #FFF1B8;
+  --ok: #1E8E5E;
+  --ok-soft: #E3F4EC;
+  --bad: #C93A36;
+  --bad-soft: #FBE7E6;
+  --code-bg: #1E2638;
+  --code-line: #2A3550;
+  --sans: 'IBM Plex Sans Hebrew', 'Segoe UI', Arial, sans-serif;
+  --mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+  --cell: 46px;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: inherit; }
+[hidden] { display: none !important; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; margin: 0; font-family: var(--sans); color: var(--ink); background: var(--white); font-size: 16px; line-height: 1.6; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--pen); outline-offset: 2px; }
+code, .mono { font-family: var(--mono); }
+
+/* ---------- סרגל עליון ---------- */
+.topbar { display: flex; align-items: center; gap: 24px; padding: 12px 24px; border-bottom: 2px solid var(--ink); background: var(--white); z-index: 20; flex-wrap: wrap; flex: none; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 19px; white-space: nowrap; }
+.brand-mark { display: flex; direction: ltr; }
+.brand-mark i { width: 14px; height: 18px; border: 2px solid var(--ink); margin-left: -2px; background: var(--white); }
+.brand-mark i:nth-child(2) { background: var(--marker); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); background: var(--white); border-radius: 8px; padding: 5px 12px 5px 10px; cursor: pointer; font-size: 15px; color: var(--ink-2); }
+.tab:hover { border-color: var(--ink-2); }
+.tab-n { font-family: var(--mono); font-weight: 600; min-width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: var(--paper); font-size: 13px; }
+.tab.on { border-color: var(--ink); color: var(--ink); font-weight: 600; box-shadow: 0 2px 0 var(--ink); }
+.tab.done .tab-n { background: var(--ok); color: var(--white); }
+.progress { margin-inline-start: auto; color: var(--ink-3); font-size: 14px; white-space: nowrap; }
+
+/* ---------- פריסה ---------- */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); flex: 1; min-height: 0; }
+.pane-q, .pane-sim { overflow-y: auto; min-height: 0; }
+.pane-q { padding: 28px 32px 64px; border-inline-end: 2px solid var(--ink); }
+.pane-sim {
+  padding: 28px 32px 64px;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 23px 23px;
+  background-position: -1px -1px;
+}
+
+/* ---------- שאלה ---------- */
+.q-num { font-family: var(--mono); font-size: 14px; color: var(--pen); font-weight: 600; margin: 0 0 2px; }
+.q-title { font-size: 30px; line-height: 1.2; margin: 0 0 16px; font-weight: 700; letter-spacing: -0.01em; }
+.q-task { font-size: 18px; max-width: 62ch; margin-bottom: 28px; }
+.q-task p { margin: 0 0 6px; }
+.section-h { font-size: 15px; font-weight: 600; color: var(--ink-2); margin: 0 0 12px; }
+
+.followups { display: flex; flex-direction: column; gap: 14px; margin-bottom: 36px; }
+.f-item { border-inline-start: 3px solid var(--line); padding: 4px 16px 6px; transition: border-color .2s; }
+.f-item.ok { border-color: var(--ok); }
+.f-q { display: block; font-weight: 500; margin-bottom: 6px; }
+.f-row { display: flex; gap: 8px; max-width: 520px; }
+.f-row input { flex: 1; min-width: 0; font-family: var(--mono); font-size: 16px; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--white); text-align: left; }
+.f-row input:focus { border-color: var(--pen); outline: none; box-shadow: 0 0 0 3px rgba(45, 85, 200, .18); }
+.f-item.ok input { background: var(--ok-soft); border-color: transparent; color: var(--ok); font-weight: 600; }
+.f-item.ok .btn-check { display: none; }
+.f-msg { font-size: 14.5px; min-height: 0; margin-top: 4px; }
+.f-msg.good { color: var(--ok); font-weight: 500; }
+.f-msg.bad { color: var(--bad); }
+.f-msg:empty { display: none; }
+.shake { animation: shake .35s; }
+@keyframes shake { 0%,100% { transform: none; } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+.btn { border: 1.5px solid var(--ink); background: var(--white); border-radius: 6px; padding: 7px 16px; cursor: pointer; font-weight: 500; }
+.btn:hover { background: var(--paper); }
+.btn-run { background: var(--pen); border-color: var(--pen); color: var(--white); font-weight: 600; padding: 9px 26px; font-size: 17px; display: inline-flex; align-items: center; gap: 8px; }
+.btn-run:hover { background: var(--pen-dark); }
+.btn-ghost { border-color: var(--line); color: var(--ink-2); }
+.btn-next { margin-top: 12px; background: var(--ok); border-color: var(--ok); color: var(--white); font-weight: 600; }
+.btn-next:hover { background: #187a50; }
+
+/* ---------- אזור הקוד ---------- */
+.code-section { border-top: 2px dashed var(--line); padding-top: 24px; }
+.code-section.reveal { animation: reveal .7s ease-out; }
+@keyframes reveal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.code-lock { display: flex; gap: 14px; align-items: center; color: var(--ink-3); padding: 18px; border: 1.5px dashed var(--line); border-radius: 8px; }
+.lock-ico { font-size: 24px; }
+.code-task { font-weight: 500; margin: 0 0 12px; }
+.editor { direction: ltr; border-radius: 8px; overflow: hidden; border: 2px solid var(--ink); background: var(--code-bg); }
+.editor .CodeMirror { height: auto; min-height: 340px; font-family: var(--mono); font-size: 15px; line-height: 1.55; }
+.editor .CodeMirror-scroll { min-height: 340px; max-height: 62vh; }
+.fallback-editor { width: 100%; min-height: 360px; border: 0; padding: 12px; background: var(--code-bg); color: #E6EAF2; font-family: var(--mono); font-size: 15px; line-height: 1.55; resize: vertical; tab-size: 4; }
+.code-actions { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.kbd-hint { color: var(--ink-3); font-size: 13px; margin-inline-start: auto; }
+
+/* תמת עורך */
+.cm-s-lab.CodeMirror { background: var(--code-bg); color: #E6EAF2; }
+.cm-s-lab .CodeMirror-gutters { background: #192032; border-right: 1px solid var(--code-line); }
+.cm-s-lab .CodeMirror-linenumber { color: #5D6A86; }
+.cm-s-lab .CodeMirror-cursor { border-left: 2px solid var(--marker); }
+.cm-s-lab .CodeMirror-selected, .cm-s-lab.CodeMirror-focused .CodeMirror-selected { background: #33426A; }
+.cm-s-lab .cm-keyword { color: #8FB3FF; }
+.cm-s-lab .cm-type, .cm-s-lab .cm-variable-3 { color: #7FD6C2; }
+.cm-s-lab .cm-def { color: #FFD84D; }
+.cm-s-lab .cm-number { color: #F7A86B; }
+.cm-s-lab .cm-string, .cm-s-lab .cm-string-2 { color: #B5E08A; }
+.cm-s-lab .cm-comment { color: #7A879F; font-style: italic; }
+.cm-s-lab .cm-atom { color: #F7A86B; }
+.cm-s-lab .cm-operator { color: #C9D2E3; }
+.cm-s-lab .cm-variable { color: #E6EAF2; }
+.cm-s-lab .cm-variable-2 { color: #E6EAF2; }
+.cm-s-lab .cm-meta { color: #8FB3FF; }
+.cm-s-lab .CodeMirror-matchingbracket { color: var(--marker) !important; text-decoration: underline; }
+.cm-s-lab .run-line { background: rgba(255, 216, 77, .2); box-shadow: inset 4px 0 0 var(--marker); }
+.cm-s-lab .err-line { background: rgba(201, 58, 54, .32); box-shadow: inset 4px 0 0 #FF6B66; }
+
+/* ---------- תוצאות ---------- */
+.results { margin-top: 18px; border: 1.5px solid var(--line); border-radius: 8px; padding: 14px 18px; background: var(--white); }
+.res-head { font-size: 17px; margin-bottom: 6px; }
+.res-head.good { color: var(--ok); }
+.res-head.bad { color: var(--bad); }
+.res-err { font-family: var(--sans); direction: rtl; unicode-bidi: plaintext; background: var(--bad-soft); color: #8A2420; padding: 10px 12px; border-radius: 6px; margin: 6px 0 10px; font-size: 14.5px; }
+.res-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.res-list li { display: flex; gap: 10px; align-items: flex-start; }
+.res-ico { width: 22px; height: 22px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; margin-top: 2px; }
+.res-list li.ok .res-ico { background: var(--ok-soft); color: var(--ok); }
+.res-list li.no .res-ico { background: var(--bad-soft); color: var(--bad); }
+.res-t { unicode-bidi: plaintext; }
+.res-d { font-size: 14.5px; color: var(--bad); unicode-bidi: plaintext; }
+.res-tip { background: var(--marker-soft); border-radius: 6px; padding: 8px 12px; font-size: 14.5px; margin: 10px 0 0; unicode-bidi: plaintext; }
+
+/* ---------- הדמיה ---------- */
+.sim-title { font-size: 44px; font-weight: 700; margin: 0 0 18px; line-height: 1; letter-spacing: -0.02em; display: inline-block; background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); padding: 0 6px; }
+.sim-h { font-size: 15px; font-weight: 600; color: var(--ink-2); margin: 0 0 12px; }
+.sim-empty { padding: 48px 12px; text-align: center; color: var(--ink-2); }
+.sim-empty p { max-width: 36ch; margin: 18px auto 0; }
+.empty-cells { display: inline-flex; direction: ltr; }
+.cell.ghost { border-style: dashed; border-color: var(--ink-3); color: var(--ink-3); background: rgba(255,255,255,.6); }
+
+.expected, .run-view { background: var(--white); border: 2px solid var(--ink); border-radius: 10px; padding: 16px 18px 18px; margin-bottom: 18px; box-shadow: 4px 4px 0 var(--ink); }
+.io { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.io-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.io-label { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.io-items { display: flex; gap: 18px; align-items: flex-end; flex-wrap: wrap; }
+.io-none { color: var(--ink-3); font-style: italic; padding: 12px 0; }
+.io-arrow { display: flex; flex-direction: column; align-items: center; color: var(--ink-3); font-size: 12px; padding-top: 20px; line-height: 1; }
+.arrow-glyph { font-size: 30px; color: var(--ink-2); }
+.io-note { color: var(--ink-2); font-size: 14.5px; margin: 14px 0 0; max-width: 60ch; }
+.run-placeholder { color: var(--ink-3); margin: 0; }
+
+/* משתנה: ערך מעל ריבוע עם השם */
+.var { display: inline-flex; flex-direction: column; align-items: center; min-width: 60px; }
+.var-val { font-family: var(--mono); font-size: 17px; font-weight: 600; padding: 1px 10px; border-radius: 999px; background: var(--marker-soft); border: 1.5px solid var(--ink); min-width: 36px; text-align: center; white-space: nowrap; }
+.var-stem { width: 2px; height: 8px; background: var(--ink); }
+.var-box { font-family: var(--mono); min-width: 60px; height: 42px; padding: 0 10px; border: 2px solid var(--ink); display: grid; place-items: center; background: var(--white); font-weight: 500; }
+.var-box.he { font-family: var(--sans); }
+.var-type { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+.var.big .var-val { font-size: 22px; padding: 2px 16px; background: var(--marker); }
+.var.unassigned .var-val { background: var(--white); color: var(--ink-3); border-style: dashed; }
+.var.changed .var-val { animation: flash .7s ease-out; }
+.var.changed .var-box { box-shadow: 0 0 0 4px var(--marker); }
+@keyframes flash { 0% { transform: translateY(-10px) scale(1.25); background: var(--marker); } 100% { transform: none; } }
+
+/* מערך: תאים מחוברים */
+.arr { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.arr-head { display: flex; gap: 8px; align-items: baseline; justify-content: flex-end; font-family: var(--mono); }
+.arr-name { font-weight: 600; }
+.arr-type { font-size: 12px; color: var(--ink-3); }
+.cells-scroll { overflow-x: auto; padding: 22px 2px 2px; margin-top: -18px; max-width: 100%; }
+.cells { display: inline-flex; }
+.cell { position: relative; width: var(--cell); display: flex; flex-direction: column; align-items: center; flex: none; }
+.cell + .cell { margin-left: -2px; }
+.cell-v { width: var(--cell); height: var(--cell); border: 2px solid var(--ink); background: var(--white); display: grid; place-items: center; font-family: var(--mono); font-size: 16px; font-weight: 500; overflow: hidden; white-space: nowrap; }
+.cell-i { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+.cell.here .cell-v { background: var(--marker); }
+.cell.here .cell-i { color: var(--ink); font-weight: 600; }
+.ptr { position: absolute; top: -20px; font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--pen); white-space: nowrap; }
+.ptr::after { content: ' ▼'; font-size: 9px; }
+.cell.drop .cell-v { animation: drop .5s cubic-bezier(.3,1.4,.6,1); }
+@keyframes drop { 0% { transform: translateY(-26px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.cell.born .cell-v { animation: born .35s ease-out backwards; animation-delay: inherit; }
+.cell.born { animation-delay: inherit; }
+@keyframes born { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+.cell.out .cell-v { border: 2px dashed var(--bad); color: var(--bad); background: var(--bad-soft); }
+.cell.out .cell-i, .cell.out .ptr { color: var(--bad); font-weight: 600; }
+.cell.more .cell-v, .cell.more { width: auto; }
+.cell.more { padding: 12px 10px; font-size: 13px; color: var(--ink-3); }
+.cell.empty { width: auto; padding: 10px 14px; border: 2px dashed var(--ink-3); color: var(--ink-3); font-size: 14px; }
+
+/* נגן */
+.controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.pbtns { display: flex; gap: 4px; }
+.pbtn { width: 38px; height: 34px; border: 1.5px solid var(--ink); background: var(--white); border-radius: 6px; cursor: pointer; font-size: 13px; padding: 0; display: grid; place-items: center; }
+.pbtn:hover { background: var(--paper); }
+.pbtn.play { width: 48px; background: var(--ink); color: var(--white); }
+.speed { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.speed input { width: 90px; accent-color: var(--pen); }
+.counter { font-size: 13px; color: var(--ink-3); margin-inline-start: auto; font-family: var(--mono); direction: rtl; }
+.scrub { width: 100%; margin: 10px 0 4px; accent-color: var(--ink); direction: ltr; }
+.desc { font-family: var(--sans); white-space: pre-line; font-size: 15px; padding: 9px 12px; border-radius: 6px; background: var(--paper); margin: 6px 0 14px; min-height: 42px; unicode-bidi: plaintext; text-align: start; border-inline-start: 4px solid var(--ink-3); }
+.desc.k-loop, .desc.k-update, .desc.k-loopinit { border-color: var(--pen); background: #EAF0FD; }
+.desc.k-loopend { border-color: var(--ink-2); }
+.desc.k-return { border-color: var(--ok); background: var(--ok-soft); }
+.desc.k-call { border-color: var(--marker); background: var(--marker-soft); }
+.desc.k-error { border-color: var(--bad); background: var(--bad-soft); color: #8A2420; }
+.desc.k-end { border-color: var(--ok); }
+
+.stage { display: flex; flex-direction: column; gap: 12px; }
+.frame { border: 1.5px solid var(--line); border-radius: 8px; padding: 10px 14px 14px; background: var(--white); }
+.frame.top { border-color: var(--ink); border-width: 2px; }
+.frame.below { opacity: .72; }
+.frame-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.frame-where { font-size: 13px; color: var(--ink-3); }
+.frame-label { font-weight: 600; font-size: 14.5px; }
+.loop-badge { margin-inline-start: auto; display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 600; color: var(--pen); background: #EAF0FD; border-radius: 999px; padding: 2px 12px; }
+.loop-ico { display: inline-block; font-size: 15px; }
+.loop-badge.pulse .loop-ico { animation: spin .6s ease-out; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.scalars { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 8px; }
+.arrays { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.frame-empty { color: var(--ink-3); font-size: 14px; margin: 0; }
+
+.console-wrap { margin-top: 14px; }
+.console-title { font-size: 13px; font-weight: 600; color: var(--ink-3); margin-bottom: 4px; }
+.console { background: var(--code-bg); color: #E6EAF2; font-family: var(--mono); font-size: 14.5px; border-radius: 6px; padding: 10px 12px; margin: 0; min-height: 60px; max-height: 180px; overflow: auto; white-space: pre-wrap; text-align: left; }
+.con-err { color: #FF8A85; }
+.note-small { font-size: 13px; color: var(--ink-3); }
+
+/* ---------- מסכים צרים ---------- */
+@media (max-width: 980px) {
+  html, body { height: auto; }
+  body { display: block; }
+  .layout { grid-template-columns: 1fr; }
+  .pane-q, .pane-sim { overflow: visible; }
+  .pane-q { border-inline-end: 0; border-bottom: 2px solid var(--ink); padding: 22px 18px 40px; }
+  .pane-sim { padding: 22px 14px 48px; }
+  .topbar { padding: 10px 16px; gap: 12px; }
+  .tab-t { display: none; }
+  .progress { font-size: 13px; }
+  .sim-title { font-size: 34px; }
+  .expected, .run-view { box-shadow: 3px 3px 0 var(--ink); padding: 14px 12px; }
+  :root { --cell: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>מערכים ב-C#</div>
+  <nav class="tabs" id="tabs" aria-label="שאלות"></nav>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="layout">
+  <!-- צד ימין: השאלה -->
+  <section class="pane-q" aria-labelledby="q-title">
+    <p class="q-num" id="q-num"></p>
+    <h2 class="q-title" id="q-title"></h2>
+    <div class="q-task" id="q-task"></div>
+
+    <h3 class="section-h">לפני שכותבים קוד</h3>
+    <div class="followups" id="followups"></div>
+
+    <div class="code-section" id="code-section">
+      <div class="code-lock" id="code-lock">
+        <span class="lock-ico" aria-hidden="true">🔒</span>
+        <span>ענו נכון על כל השאלות שלמעלה, ואז ייפתח עורך הקוד.</span>
+      </div>
+      <div id="code-body" hidden>
+        <p class="code-task">כתבו את הפעולה כולל הקריאה מהתוכנית הראשית, והריצו אותה.</p>
+        <div class="editor" id="editor"></div>
+        <div class="code-actions">
+          <button class="btn btn-run" id="run" type="button"><span aria-hidden="true">▶</span> הרצה</button>
+          <button class="btn btn-ghost" id="reset" type="button">התחלה מחדש</button>
+          <span class="kbd-hint" dir="ltr">Ctrl + Enter</span>
+        </div>
+        <div class="results" id="results" hidden aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- צד שמאל: הדמיה -->
+  <section class="pane-sim" aria-labelledby="sim-title">
+    <div class="pane-sim-inner">
+      <h1 class="sim-title" id="sim-title">הדמיה</h1>
+      <div id="sim-body"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* =====================================================================
+   מפרש C# מוקטן (בדפדפן) — תומך בתת-קבוצה של השפה שמתאימה ללימוד מערכים:
+   מחלקות, פעולות static, int/double/char/bool/string, מערכים, for/foreach/while,
+   if/else, Random, Console, Math, string.Join ועוד.
+   המפרש מתעד "צעדים" כדי שאפשר יהיה להציג הדמיה של ריצת הקוד.
+   ===================================================================== */
+const CSharp = (() => {
+  class CSError extends Error {
+    constructor(msg, line, kind) { super(msg); this.line = line || 0; this.kind = kind || 'runtime'; }
+  }
+  class ReturnSig { constructor(val) { this.val = val; } }
+  class BreakSig {}
+  class ContinueSig {}
+
+  // ---------- ערכים ----------
+  const V = {
+    int: n => ({ t: 'int', v: n | 0 }),
+    dbl: n => ({ t: 'double', v: n }),
+    chr: c => ({ t: 'char', v: c & 0xffff }),
+    bool: b => ({ t: 'bool', v: !!b }),
+    str: s => ({ t: 'string', v: s }),
+    nul: () => ({ t: 'null', v: null }),
+  };
+  const TYPE_ALIAS = { Int32: 'int', long: 'int', short: 'int', byte: 'int', float: 'double', Double: 'double', String: 'string', Char: 'char', Boolean: 'bool' };
+  const normType = t => {
+    let base = t.replace(/\[\]/g, '');
+    const dims = (t.match(/\[\]/g) || []).length;
+    base = base.replace(/^System\./, '');
+    base = TYPE_ALIAS[base] || base;
+    return base + '[]'.repeat(dims);
+  };
+  const typeOf = v => v.t === 'array' ? v.elem + '[]' : v.t;
+  const isNum = v => v.t === 'int' || v.t === 'double' || v.t === 'char';
+
+  function defaultFor(type) {
+    if (type.endsWith('[]')) return V.nul();
+    switch (type) {
+      case 'int': return V.int(0);
+      case 'double': return V.dbl(0);
+      case 'char': return V.chr(0);
+      case 'bool': return V.bool(false);
+      default: return V.nul();
+    }
+  }
+
+  function charLit(code) {
+    const m = { 0: '\\0', 10: '\\n', 9: '\\t', 39: "\\'", 92: '\\\\' };
+    return "'" + (m[code] !== undefined ? m[code] : String.fromCharCode(code)) + "'";
+  }
+  function fmtDouble(n) {
+    if (Number.isNaN(n)) return 'NaN';
+    if (!Number.isFinite(n)) return n > 0 ? '∞' : '-∞';
+    return String(parseFloat(n.toPrecision(15)));
+  }
+  // איך C# מדפיס ערך (Console / שרשור)
+  function toCsString(v) {
+    switch (v.t) {
+      case 'int': return String(v.v);
+      case 'double': return fmtDouble(v.v);
+      case 'char': return String.fromCharCode(v.v);
+      case 'bool': return v.v ? 'True' : 'False';
+      case 'string': return v.v;
+      case 'null': return '';
+      case 'array': {
+        const m = { int: 'System.Int32', char: 'System.Char', double: 'System.Double', string: 'System.String', bool: 'System.Boolean' };
+        return (m[v.elem] || v.elem) + '[]';
+      }
+      case 'Random': return 'System.Random';
+    }
+    return String(v.v);
+  }
+  // איך ערך נראה בהדמיה (כמו בקוד)
+  function toDisplay(v) {
+    switch (v.t) {
+      case 'char': return charLit(v.v);
+      case 'string': return JSON.stringify(v.v);
+      case 'bool': return v.v ? 'true' : 'false';
+      case 'null': return 'null';
+      case 'double': return fmtDouble(v.v);
+      case 'array': return v.elem + '[' + v.v.length + ']';
+      case 'Random': return 'Random';
+    }
+    return toCsString(v);
+  }
+
+  // ---------- מנתח מילולי ----------
+  const OPS = ['++', '--', '+=', '-=', '*=', '/=', '%=', '==', '!=', '<=', '>=', '&&', '||', '=>',
+    '+', '-', '*', '/', '%', '<', '>', '=', '!', '(', ')', '{', '}', '[', ']', ';', ',', '.', '?', ':'];
+  function readEscape(ch) {
+    return { n: '\n', t: '\t', 0: '\0', '\\': '\\', "'": "'", '"': '"', r: '\r' }[ch];
+  }
+  function tokenize(src, lineOffset) {
+    const toks = []; let i = 0, line = 1 + (lineOffset || 0);
+    while (i < src.length) {
+      const c = src[i];
+      if (c === '\n') { line++; i++; continue; }
+      if (/\s/.test(c)) { i++; continue; }
+      if (c === '/' && src[i + 1] === '/') { while (i < src.length && src[i] !== '\n') i++; continue; }
+      if (c === '/' && src[i + 1] === '*') {
+        i += 2;
+        while (i < src.length && !(src[i] === '*' && src[i + 1] === '/')) { if (src[i] === '\n') line++; i++; }
+        i += 2; continue;
+      }
+      const start = i;
+      if (/[0-9]/.test(c)) {
+        let j = i; while (/[0-9]/.test(src[j] || '')) j++;
+        let isD = false;
+        if (src[j] === '.' && /[0-9]/.test(src[j + 1] || '')) { isD = true; j++; while (/[0-9]/.test(src[j] || '')) j++; }
+        const txt = src.slice(i, j);
+        if (/[dDfFmM]/.test(src[j] || '')) { isD = true; j++; }
+        else if (/[lLuU]/.test(src[j] || '')) j++;
+        toks.push({ k: isD ? 'dbl' : 'int', v: parseFloat(txt), line, pos: start, end: j });
+        i = j; continue;
+      }
+      if (c === "'") {
+        let j = i + 1, ch;
+        if (src[j] === '\\') { ch = readEscape(src[j + 1]); if (ch === undefined) throw new CSError('רצף בריחה לא מוכר בתו', line, 'compile'); j += 2; }
+        else { ch = src[j]; j++; }
+        if (ch === undefined || ch === "'" || src[j] !== "'")
+          throw new CSError("תו לא תקין. תו בודד נכתב בין גרשיים בודדים, למשל '#'. מחרוזת נכתבת בין מירכאות כפולות.", line, 'compile');
+        toks.push({ k: 'char', v: ch.charCodeAt(0), line, pos: start, end: j + 1 });
+        i = j + 1; continue;
+      }
+      if (c === '"' || (c === '$' && src[i + 1] === '"')) {
+        const interp = c === '$';
+        let j = i + (interp ? 2 : 1);
+        if (interp) {
+          let depth = 0, raw = '';
+          while (j < src.length) {
+            const d = src[j];
+            if (d === '\n') break;
+            if (depth === 0 && d === '"') break;
+            if (d === '"' && depth > 0) { // מחרוזת בתוך ביטוי
+              let k = j + 1; while (k < src.length && src[k] !== '"' && src[k] !== '\n') { if (src[k] === '\\') k++; k++; }
+              raw += src.slice(j, k + 1); j = k + 1; continue;
+            }
+            if (d === '{') depth++;
+            if (d === '}' && depth > 0) depth--;
+            if (d === '\\' && depth === 0) { raw += d + (src[j + 1] || ''); j += 2; continue; }
+            raw += d; j++;
+          }
+          if (src[j] !== '"') throw new CSError('מחרוזת לא נסגרה — חסרות מירכאות סוגרות "', line, 'compile');
+          toks.push({ k: 'istr', v: raw, line, pos: start, end: j + 1 });
+        } else {
+          let s = '';
+          while (j < src.length && src[j] !== '"' && src[j] !== '\n') {
+            if (src[j] === '\\') { const e = readEscape(src[j + 1]); s += e === undefined ? src[j + 1] : e; j += 2; }
+            else { s += src[j]; j++; }
+          }
+          if (src[j] !== '"') throw new CSError('מחרוזת לא נסגרה — חסרות מירכאות סוגרות "', line, 'compile');
+          toks.push({ k: 'str', v: s, line, pos: start, end: j + 1 });
+        }
+        i = j + 1; continue;
+      }
+      if (/[A-Za-z_@\u0590-\u05FF]/.test(c)) {
+        let j = i + 1; while (/[\w\u0590-\u05FF]/.test(src[j] || '')) j++;
+        let w = src.slice(i, j); if (w[0] === '@') w = w.slice(1);
+        toks.push({ k: 'id', v: w, line, pos: start, end: j });
+        i = j; continue;
+      }
+      const op = OPS.find(o => src.startsWith(o, i));
+      if (!op) throw new CSError(`תו לא מוכר בקוד: "${c}"`, line, 'compile');
+      toks.push({ k: 'op', v: op, line, pos: start, end: i + op.length });
+      i += op.length;
+    }
+    toks.push({ k: 'eof', v: '', line, pos: src.length, end: src.length });
+    return toks;
+  }
+
+  // ---------- מנתח תחבירי ----------
+  const MODIFIERS = new Set(['public', 'private', 'protected', 'internal', 'static', 'const', 'readonly', 'sealed', 'abstract', 'partial', 'unsafe', 'override', 'virtual']);
+  const STATIC_CLASSES = new Set(['Console', 'Math', 'string', 'String', 'int', 'Int32', 'char', 'Char', 'Convert', 'Array', 'double', 'Double', 'bool', 'System']);
+
+  function Parser(src, lineOffset) {
+    const toks = tokenize(src, lineOffset);
+    let p = 0;
+    const peek = (o = 0) => toks[Math.min(p + o, toks.length - 1)];
+    const next = () => toks[p++];
+    const is = (v, o = 0) => { const t = peek(o); return (t.k === 'op' || t.k === 'id') && t.v === v; };
+    const isId = (o = 0) => peek(o).k === 'id';
+    const fail = (msg, t) => { throw new CSError(msg, (t || peek()).line, 'compile'); };
+    const tokDesc = t => t.k === 'eof' ? 'סוף הקוד' : `"${src.slice(t.pos, t.end)}"`;
+    const expect = (v, what) => {
+      if (!is(v)) {
+        const t = peek();
+        const prevLine = p > 0 ? toks[p - 1].line : t.line;
+        // חסר ; — בדרך כלל השגיאה בשורה הקודמת
+        if (v === ';') fail(`חסר נקודה-פסיק ; בסוף השורה`, { line: prevLine });
+        fail(`ציפיתי ל-${v}${what ? ' ' + what : ''} אבל מצאתי ${tokDesc(t)}`, t);
+      }
+      return next();
+    };
+    const ident = what => { if (!isId()) fail(`ציפיתי לשם ${what || ''} אבל מצאתי ${tokDesc(peek())}`); return next().v; };
+    const srcFrom = startTok => src.slice(startTok.pos, toks[p - 1].end).replace(/\s+/g, ' ');
+
+    function tryType() {
+      const save = p;
+      if (!isId()) return null;
+      let name = next().v;
+      while (is('.') && isId(1)) { next(); name += '.' + next().v; }
+      if (is('<')) { p = save; return null; }
+      while (is('[') && is(']', 1)) { next(); next(); name += '[]'; }
+      if (is('?')) { /* nullable — לא נתמך */ }
+      return name;
+    }
+    function parseType() {
+      const t = tryType();
+      if (!t) fail(`ציפיתי לטיפוס (למשל int) אבל מצאתי ${tokDesc(peek())}`);
+      return t;
+    }
+
+    function parseProgram() {
+      const classes = [];
+      while (peek().k !== 'eof') {
+        if (is('using')) { while (!is(';') && peek().k !== 'eof') next(); expect(';'); continue; }
+        if (is('namespace')) {
+          next(); while (!is('{') && !is(';')) next();
+          if (is(';')) { next(); continue; }
+          expect('{');
+          while (!is('}')) { if (peek().k === 'eof') fail('חסר } לסגירת ה-namespace'); classes.push(parseClass()); }
+          expect('}'); continue;
+        }
+        classes.push(parseClass());
+      }
+      if (!classes.length) fail('לא נמצאה מחלקה (class) בקוד');
+      return { classes };
+    }
+    function parseClass() {
+      while (isId() && MODIFIERS.has(peek().v)) next();
+      if (!is('class')) {
+        fail(`ציפיתי ל-class אבל מצאתי ${tokDesc(peek())}. כל הקוד צריך להיות בתוך class Program { ... }`);
+      }
+      next();
+      const name = ident('מחלקה');
+      expect('{', 'לפתיחת המחלקה');
+      const methods = [], fields = [];
+      while (!is('}')) {
+        if (peek().k === 'eof') fail('חסר } לסגירת המחלקה');
+        const startTok = peek();
+        const mods = new Set();
+        while (isId() && MODIFIERS.has(peek().v)) mods.add(next().v);
+        const type = parseType();
+        if (is('(') && type === name) fail('בנאים (constructors) לא נתמכים באתר הזה');
+        const mname = ident('פעולה או שדה');
+        if (is('(')) {
+          next();
+          const params = [];
+          while (!is(')')) {
+            if (is('ref') || is('out') || is('params')) next();
+            const pt = parseType(); const pn = ident('פרמטר');
+            params.push({ type: normType(pt), name: pn });
+            if (!is(')')) expect(',', 'בין הפרמטרים');
+          }
+          next();
+          if (!is('{')) fail(`ציפיתי ל-{ לפתיחת גוף הפעולה ${mname}`);
+          const body = parseBlock();
+          methods.push({ name: mname, ret: normType(type), params, body, line: startTok.line, isStatic: mods.has('static'), cls: name, sig: srcFrom(startTok).replace(/\{.*$/, '').trim() });
+        } else {
+          // שדה
+          for (;;) {
+            let init = null;
+            if (is('=')) { next(); init = is('{') ? parseArrayInit() : parseExpr(); }
+            fields.push({ type: normType(type), name: mname, init, line: startTok.line, isStatic: mods.has('static') || mods.has('const') });
+            if (is(',')) { next(); ident(); continue; }
+            break;
+          }
+          expect(';');
+        }
+      }
+      next();
+      return { name, methods, fields };
+    }
+
+    function parseBlock() {
+      const t = expect('{');
+      const body = [];
+      while (!is('}')) {
+        if (peek().k === 'eof') fail('חסר } לסגירת בלוק שנפתח בשורה ' + t.line, t);
+        body.push(parseStmt());
+      }
+      next();
+      return { k: 'Block', body, line: t.line };
+    }
+
+    function tryDeclStart() {
+      const save = p;
+      if (is('const')) next();
+      const type = tryType();
+      if (type && isId() && (is('=', 1) || is(';', 1) || is(',', 1) || is('in', 1))) return type;
+      p = save; return null;
+    }
+
+    function parseVarDecl(type, startTok) {
+      const decls = [];
+      for (;;) {
+        const nt = peek();
+        const name = ident('משתנה');
+        let init = null;
+        if (is('=')) { next(); init = is('{') ? parseArrayInit() : parseExpr(); }
+        decls.push({ name, init, line: nt.line });
+        if (is(',')) { next(); continue; }
+        break;
+      }
+      return { k: 'VarDecl', type: normType(type), decls, line: startTok.line, src: srcFrom(startTok) };
+    }
+
+    function parseArrayInit() {
+      const t = expect('{');
+      const items = [];
+      while (!is('}')) { items.push(is('{') ? parseArrayInit() : parseExpr()); if (!is('}')) expect(',', 'בין איברי המערך'); }
+      next();
+      return { k: 'ArrLit', items, line: t.line };
+    }
+
+    function parseStmt() {
+      const t = peek();
+      if (is('{')) return parseBlock();
+      if (is(';')) { next(); return { k: 'Empty', line: t.line }; }
+      if (is('if')) {
+        next(); expect('(', 'אחרי if'); const st = peek(); const cond = parseExpr(); const csrc = srcFrom(st); expect(')', 'לסגירת התנאי');
+        const then = parseStmt(); let els = null;
+        if (is('else')) { next(); els = parseStmt(); }
+        return { k: 'If', cond, csrc, then, els, line: t.line };
+      }
+      if (is('while')) {
+        next(); expect('(', 'אחרי while'); const st = peek(); const cond = parseExpr(); const csrc = srcFrom(st); expect(')');
+        return { k: 'While', cond, csrc, body: parseStmt(), line: t.line };
+      }
+      if (is('do')) {
+        next(); const body = parseStmt(); if (!is('while')) fail('ציפיתי ל-while אחרי גוף ה-do');
+        next(); expect('('); const st = peek(); const cond = parseExpr(); const csrc = srcFrom(st); expect(')'); expect(';');
+        return { k: 'DoWhile', cond, csrc, body, line: t.line };
+      }
+      if (is('for')) {
+        next(); expect('(', 'אחרי for');
+        let init = [];
+        if (!is(';')) {
+          const st = peek();
+          const type = tryDeclStart();
+          if (type) init.push(parseVarDecl(type, st));
+          else { do { const s2 = peek(); const e = parseExpr(); init.push({ k: 'ExprStmt', expr: e, line: s2.line, src: srcFrom(s2) }); } while (is(',') && next()); }
+        }
+        const isrc = init.map(s => s.src).join(', ');
+        expect(';', 'אחרי האתחול של ה-for');
+        let cond = null, csrc = '';
+        if (!is(';')) { const st = peek(); cond = parseExpr(); csrc = srcFrom(st); }
+        expect(';', 'אחרי התנאי של ה-for');
+        const update = []; let usrc = '';
+        if (!is(')')) { const st = peek(); do { update.push(parseExpr()); } while (is(',') && next()); usrc = srcFrom(st); }
+        expect(')', 'לסגירת ה-for');
+        const body = parseStmt();
+        return { k: 'For', init, isrc, cond, csrc, update, usrc, body, line: t.line };
+      }
+      if (is('foreach')) {
+        next(); expect('('); const type = parseType(); const name = ident('משתנה');
+        if (!is('in')) fail('ציפיתי ל-in בלולאת foreach'); next();
+        const st = peek(); const iter = parseExpr(); const isrc = srcFrom(st); expect(')');
+        return { k: 'Foreach', type: normType(type), name, iter, isrc, body: parseStmt(), line: t.line };
+      }
+      if (is('return')) {
+        next(); let expr = null; const st = peek();
+        if (!is(';')) expr = parseExpr();
+        const src2 = expr ? srcFrom(st) : '';
+        expect(';');
+        return { k: 'Return', expr, src: src2, line: t.line };
+      }
+      if (is('break')) { next(); expect(';'); return { k: 'Break', line: t.line }; }
+      if (is('continue')) { next(); expect(';'); return { k: 'Continue', line: t.line }; }
+      const type = tryDeclStart();
+      if (type) { const d = parseVarDecl(type, t); expect(';'); return d; }
+      const expr = parseExpr();
+      const s = srcFrom(t);
+      if (!['Assign', 'PreInc', 'PostInc', 'Call', 'NewObj'].includes(expr.k))
+        fail(`"${s}" אינה הוראה תקינה — רק השמה, קריאה לפעולה, ++ או -- יכולות לעמוד לבד בשורה`, t);
+      expect(';');
+      return { k: 'ExprStmt', expr, line: t.line, src: s };
+    }
+
+    // ביטויים
+    function parseExpr() { return parseAssign(); }
+    function parseAssign() {
+      const left = parseTernary();
+      if (peek().k === 'op' && ['=', '+=', '-=', '*=', '/=', '%='].includes(peek().v)) {
+        const opTok = next();
+        if (left.k !== 'Id' && left.k !== 'Index' && left.k !== 'Member') fail('צד שמאל של השמה חייב להיות משתנה או תא במערך', opTok);
+        const value = (opTok.v === '=' && is('{')) ? parseArrayInit() : parseAssign();
+        return { k: 'Assign', op: opTok.v, target: left, value, line: opTok.line };
+      }
+      return left;
+    }
+    function parseTernary() {
+      const c = parseBin(0);
+      if (is('?')) { const t = next(); const a = parseAssign(); expect(':', 'באופרטור ?:'); const b = parseAssign(); return { k: 'Cond', c, a, b, line: t.line }; }
+      return c;
+    }
+    const LEVELS = [['||'], ['&&'], ['==', '!='], ['<', '>', '<=', '>='], ['+', '-'], ['*', '/', '%']];
+    function parseBin(lvl) {
+      if (lvl >= LEVELS.length) return parseUnary();
+      let l = parseBin(lvl + 1);
+      while (peek().k === 'op' && LEVELS[lvl].includes(peek().v)) {
+        const t = next(); const r = parseBin(lvl + 1);
+        l = { k: 'Bin', op: t.v, l, r, line: t.line };
+      }
+      return l;
+    }
+    const CASTABLE = new Set(['int', 'char', 'double', 'string', 'bool', 'long', 'float', 'short', 'byte']);
+    function parseUnary() {
+      const t = peek();
+      if (t.k === 'op' && ['-', '+', '!'].includes(t.v)) { next(); return { k: 'Un', op: t.v, e: parseUnary(), line: t.line }; }
+      if (t.k === 'op' && (t.v === '++' || t.v === '--')) { next(); const target = parseUnary(); return { k: 'PreInc', op: t.v, target, line: t.line }; }
+      if (is('(') && isId(1) && CASTABLE.has(peek(1).v) && is(')', 2)) {
+        next(); const type = next().v; next();
+        return { k: 'Cast', type: normType(type), e: parseUnary(), line: t.line };
+      }
+      return parsePostfix(parsePrimary());
+    }
+    function parsePostfix(e) {
+      for (;;) {
+        const t = peek();
+        if (is('.')) { next(); const name = ident('אחרי הנקודה'); e = { k: 'Member', obj: e, name, line: t.line }; continue; }
+        if (is('(')) {
+          next(); const args = [];
+          while (!is(')')) { args.push(parseExpr()); if (!is(')')) expect(',', 'בין הארגומנטים'); }
+          next(); e = { k: 'Call', callee: e, args, line: t.line }; continue;
+        }
+        if (is('[')) { next(); const idx = parseExpr(); expect(']'); e = { k: 'Index', obj: e, idx, line: t.line }; continue; }
+        if (is('++') || is('--')) { next(); e = { k: 'PostInc', op: t.v, target: e, line: t.line }; continue; }
+        return e;
+      }
+    }
+    function parsePrimary() {
+      const t = peek();
+      switch (t.k) {
+        case 'int': next(); return { k: 'Lit', val: V.int(t.v), line: t.line };
+        case 'dbl': next(); return { k: 'Lit', val: V.dbl(t.v), line: t.line };
+        case 'char': next(); return { k: 'Lit', val: V.chr(t.v), line: t.line };
+        case 'str': next(); return { k: 'Lit', val: V.str(t.v), line: t.line };
+        case 'istr': next(); return parseInterp(t);
+      }
+      if (is('(')) { next(); const e = parseExpr(); expect(')'); return e; }
+      if (is('[')) { // collection expression [1,2,3]
+        next(); const items = [];
+        while (!is(']')) { items.push(parseExpr()); if (!is(']')) expect(','); }
+        next(); return { k: 'ArrLit', items, line: t.line };
+      }
+      if (is('true') || is('false')) { next(); return { k: 'Lit', val: V.bool(t.v === 'true'), line: t.line }; }
+      if (is('null')) { next(); return { k: 'Lit', val: V.nul(), line: t.line }; }
+      if (is('new')) {
+        next();
+        let base = ident('טיפוס אחרי new');
+        while (is('.') && isId(1)) { next(); base = next().v; }
+        base = normType(base);
+        if (is('[')) {
+          next();
+          if (is(']')) { // new int[] { ... }
+            next(); let dims = 1; while (is('[') && is(']', 1)) { next(); next(); dims++; }
+            if (!is('{')) fail('אחרי new ' + base + '[] צריך לבוא אתחול בסוגריים מסולסלים { ... }');
+            const init = parseArrayInit();
+            return { k: 'NewArr', elem: base + '[]'.repeat(dims - 1), size: null, init, line: t.line };
+          }
+          const size = parseExpr(); expect(']', 'לסגירת גודל המערך');
+          let extra = '';
+          while (is('[') && is(']', 1)) { next(); next(); extra += '[]'; }
+          let init = null; if (is('{')) init = parseArrayInit();
+          return { k: 'NewArr', elem: base + extra, size, init, line: t.line };
+        }
+        if (is('(')) {
+          next(); const args = [];
+          while (!is(')')) { args.push(parseExpr()); if (!is(')')) expect(','); }
+          next(); return { k: 'NewObj', type: base, args, line: t.line };
+        }
+        fail('ציפיתי ל-[ או ל-( אחרי new ' + base);
+      }
+      if (t.k === 'id') { next(); return { k: 'Id', name: t.v, line: t.line }; }
+      fail(`ביטוי לא תקין: ${tokDesc(t)}`);
+    }
+    function parseInterp(t) {
+      const raw = t.v, parts = [];
+      let i = 0, text = '';
+      const flush = () => { if (text) parts.push({ text }); text = ''; };
+      while (i < raw.length) {
+        const c = raw[i];
+        if (c === '{' && raw[i + 1] === '{') { text += '{'; i += 2; continue; }
+        if (c === '}' && raw[i + 1] === '}') { text += '}'; i += 2; continue; }
+        if (c === '\\') { const e = readEscape(raw[i + 1]); text += e === undefined ? raw[i + 1] : e; i += 2; continue; }
+        if (c === '{') {
+          let depth = 1, j = i + 1;
+          while (j < raw.length && depth) { if (raw[j] === '{') depth++; else if (raw[j] === '}') depth--; if (depth) j++; }
+          let inner = raw.slice(i + 1, j);
+          const colon = inner.search(/:(?=[^"]*$)/); // פורמט — מתעלמים
+          if (colon > 0 && !/[?]/.test(inner)) inner = inner.slice(0, colon);
+          flush();
+          const sub = Parser(inner, t.line - 1);
+          parts.push({ expr: sub.exprOnly() });
+          i = j + 1; continue;
+        }
+        text += c; i++;
+      }
+      flush();
+      return { k: 'Interp', parts, line: t.line };
+    }
+    return {
+      program: parseProgram,
+      exprOnly() { const e = parseExpr(); if (peek().k !== 'eof') fail('ביטוי לא תקין בתוך מחרוזת $'); return e; },
+    };
+  }
+
+  // ---------- מריץ ----------
+  const MAX_OPS = 3000000, MAX_STEPS = 2500, MAX_DEPTH = 800;
+
+  function Interpreter(prog, opts) {
+    opts = opts || {};
+    const trace = !!opts.trace;
+    const methods = new Map();
+    const fields = new Map();
+    for (const c of prog.classes) for (const m of c.methods) {
+      if (!methods.has(m.name)) methods.set(m.name, []);
+      methods.get(m.name).push(m);
+    }
+    const classNames = new Set(prog.classes.map(c => c.name));
+    let stack = [], steps = [], out = '', ops = 0, arrSeq = 0, pending = [], msgs = [], truncated = false;
+    const calledFrom = new Map(); // name -> Set(caller)
+    const readLine = opts.readLine || (() => '');
+
+    const err = (msg, line) => { throw new CSError(msg, line); };
+    const top = () => stack[stack.length - 1];
+    const tick = line => { if (++ops > MAX_OPS) err('הקוד רץ יותר מדי זמן — כנראה יש לולאה אינסופית. בדקו את התנאי ואת העדכון של הלולאה.', line); };
+
+    function lookup(name) {
+      const f = top();
+      if (f) for (let i = f.scopes.length - 1; i >= 0; i--) if (f.scopes[i].has(name)) return { e: f.scopes[i].get(name), frame: stack.length - 1 };
+      if (fields.has(name)) return { e: fields.get(name), frame: -1 };
+      return null;
+    }
+    function declare(name, type, val, line) {
+      const f = top();
+      for (const sc of f.scopes) if (sc.has(name)) err(`המשתנה ${name} כבר הוגדר קודם בפעולה הזו — אי אפשר להגדיר אותו שוב (רק לשנות את ערכו, בלי לכתוב שוב את הטיפוס)`, line);
+      f.scopes[f.scopes.length - 1].set(name, { type, val, assigned: val !== undefined });
+    }
+
+    // ---- צעדים להדמיה ----
+    function dispVal(v, arrays) {
+      if (v === undefined) return { s: '?', unassigned: true };
+      if (v.t === 'array') {
+        if (!arrays[v.id]) {
+          arrays[v.id] = { elem: v.elem, values: null };
+          arrays[v.id].values = v.v.map(x => x.t === 'array' ? '[' + x.v.length + ']' : toDisplay(x));
+        }
+        return { arr: v.id };
+      }
+      return { s: toDisplay(v) };
+    }
+    function step(line, desc, extra) {
+      if (!trace) { pending = []; msgs = []; return; }
+      if (steps.length >= MAX_STEPS) { truncated = true; pending = []; msgs = []; return; }
+      const arrays = {};
+      const frames = stack.map(f => {
+        const vars = [];
+        for (const sc of f.scopes) for (const [name, e] of sc) vars.push({ name, type: e.type, ...dispVal(e.assigned ? e.val : undefined, arrays) });
+        return { label: f.label, name: f.name, vars, loops: f.loops.map(l => ({ ...l })) };
+      });
+      steps.push({ line, desc: desc || msgs.join('\n'), frames, arrays, changes: pending, out, kind: (extra && extra.kind) || '' });
+      pending = []; msgs = [];
+    }
+
+    // ---- המרות ----
+    function coerce(v, type, line, ctx) {
+      type = normType(type);
+      if (type === 'var') return v;
+      const bad = () => err(`לא ניתן להמיר ${typeOf(v)} ל-${type}${ctx ? ' (' + ctx + ')' : ''}`, line);
+      if (type.endsWith('[]')) {
+        if (v.t === 'null') return v;
+        if (v.t === 'array' && v.elem + '[]' === type) return v;
+        return bad();
+      }
+      switch (type) {
+        case 'int':
+          if (v.t === 'int') return v;
+          if (v.t === 'char') return V.int(v.v);
+          if (v.t === 'double') err(`לא ניתן להמיר double ל-int בלי המרה מפורשת — כתבו (int) לפני הערך${ctx ? ' (' + ctx + ')' : ''}`, line);
+          return bad();
+        case 'double':
+          if (isNum(v)) return V.dbl(v.v);
+          return bad();
+        case 'char':
+          if (v.t === 'char') return v;
+          if (v.t === 'int') err(`לא ניתן לשים int בתוך char בלי המרה מפורשת — כתבו (char) לפני הערך${ctx ? ' (' + ctx + ')' : ''}`, line);
+          if (v.t === 'string') err(`לא ניתן לשים מחרוזת בתוך char. תו בודד כותבים בגרשיים בודדים: 'a' ולא "a"${ctx ? ' (' + ctx + ')' : ''}`, line);
+          return bad();
+        case 'bool': if (v.t === 'bool') return v; return bad();
+        case 'string': if (v.t === 'string' || v.t === 'null') return v; return bad();
+        case 'Random': if (v.t === 'Random' || v.t === 'null') return v; return bad();
+        case 'object': return v;
+      }
+      err(`הטיפוס ${type} לא נתמך באתר הזה`, line);
+    }
+    function explicitCast(v, type, line) {
+      switch (type) {
+        case 'int': if (v.t === 'double') return V.int(Math.trunc(v.v)); if (isNum(v)) return V.int(v.v); break;
+        case 'char': if (isNum(v)) return V.chr(Math.trunc(v.v)); break;
+        case 'double': if (isNum(v)) return V.dbl(v.v); break;
+        case 'string': if (v.t === 'string') return v; break;
+        case 'bool': if (v.t === 'bool') return v; break;
+      }
+      err(`לא ניתן להמיר ${typeOf(v)} ל-${type}`, line);
+    }
+    function numOrErr(v, op, line) { if (!isNum(v)) err(`אי אפשר להפעיל ${op} על ${typeOf(v)}`, line); return v; }
+    function boolOf(v, line, what) { if (v.t !== 'bool') err(`${what || 'התנאי'} חייב להיות ביטוי בוליאני (true/false), אבל התקבל ${typeOf(v)}`, line); return v.v; }
+
+    function binop(op, a, b, line) {
+      if (op === '+' && (a.t === 'string' || b.t === 'string')) return V.str(toCsString(a) + toCsString(b));
+      if (op === '==' || op === '!=') {
+        let eq;
+        if (isNum(a) && isNum(b)) eq = a.v === b.v;
+        else if (a.t === 'null' || b.t === 'null') eq = a.t === b.t;
+        else if (a.t !== b.t) err(`אי אפשר להשוות בין ${typeOf(a)} ל-${typeOf(b)}`, line);
+        else eq = a.t === 'array' ? a === b : a.v === b.v;
+        return V.bool(op === '==' ? eq : !eq);
+      }
+      if (op === '&&' || op === '||') { return V.bool(op === '&&' ? boolOf(a, line, 'צד של &&') && boolOf(b, line, 'צד של &&') : boolOf(a, line, 'צד של ||') || boolOf(b, line, 'צד של ||')); }
+      numOrErr(a, op, line); numOrErr(b, op, line);
+      const dbl = a.t === 'double' || b.t === 'double';
+      switch (op) {
+        case '<': return V.bool(a.v < b.v);
+        case '>': return V.bool(a.v > b.v);
+        case '<=': return V.bool(a.v <= b.v);
+        case '>=': return V.bool(a.v >= b.v);
+        case '+': return dbl ? V.dbl(a.v + b.v) : V.int(a.v + b.v);
+        case '-': return dbl ? V.dbl(a.v - b.v) : V.int(a.v - b.v);
+        case '*': return dbl ? V.dbl(a.v * b.v) : V.int(Math.imul(a.v, b.v));
+        case '/':
+          if (dbl) return V.dbl(a.v / b.v);
+          if (b.v === 0) err('חילוק באפס (DivideByZeroException)', line);
+          return V.int(Math.trunc(a.v / b.v));
+        case '%':
+          if (dbl) return V.dbl(a.v % b.v);
+          if (b.v === 0) err('שארית מחילוק באפס (DivideByZeroException)', line);
+          return V.int(a.v % b.v);
+      }
+      err('אופרטור לא נתמך: ' + op, line);
+    }
+
+    // ---- lvalues ----
+    function exprName(e) {
+      if (e.k === 'Id') return e.name;
+      if (e.k === 'Index') return exprName(e.obj) + '[' + (e.idx.k === 'Lit' ? toCsString(e.idx.val) : exprName(e.idx)) + ']';
+      if (e.k === 'Member') return exprName(e.obj) + '.' + e.name;
+      if (e.k === 'Lit') return toDisplay(e.val);
+      return '…';
+    }
+    function arrIndex(arrV, idxV, e) {
+      if (arrV.t === 'null') err(`המערך ${exprName(e.obj)} הוא null — עוד לא יצרתם אותו עם new (NullReferenceException)`, e.line);
+      if (arrV.t !== 'array' && arrV.t !== 'string') err(`${exprName(e.obj)} אינו מערך, אי אפשר לגשת אליו עם [ ]`, e.line);
+      const iv = coerce(idxV, 'int', e.line, 'אינדקס במערך');
+      const len = arrV.t === 'array' ? arrV.v.length : arrV.v.length;
+      if (iv.v < 0 || iv.v >= len)
+        err(`חריגה מגבולות המערך (IndexOutOfRangeException): ניסיתם לגשת לתא ${exprName(e.obj)}[${iv.v}], אבל ${len === 0 ? 'המערך ריק' : `האינדקסים במערך הם רק 0 עד ${len - 1}`}`, e.line);
+      return iv.v;
+    }
+    function getL(t) { return evalE(t); }
+    function setL(t, val, line) {
+      if (t.k === 'Id') {
+        const r = lookup(t.name);
+        if (!r) err(`המשתנה ${t.name} לא הוגדר. צריך להגדיר אותו קודם עם טיפוס, למשל: int ${t.name} = 0;`, line);
+        val = coerce(val, r.e.type, line, 'השמה ל-' + t.name);
+        r.e.val = val; r.e.assigned = true;
+        pending.push({ kind: 'var', frame: r.frame, name: t.name });
+        msgs.push(`${t.name} = ${toDisplay(val)}`);
+        return val;
+      }
+      if (t.k === 'Index') {
+        const a = evalE(t.obj); const iv = evalE(t.idx);
+        if (a.t === 'string') err('אי אפשר לשנות תו בתוך מחרוזת (string) — מחרוזות לא ניתנות לשינוי', line);
+        const i = arrIndex(a, iv, t);
+        val = coerce(val, a.elem, line, `השמה לתא במערך ${a.elem}[]`);
+        a.v[i] = val;
+        pending.push({ kind: 'cell', arr: a.id, index: i });
+        msgs.push(`${exprName(t.obj)}[${i}] = ${toDisplay(val)}`);
+        return val;
+      }
+      if (t.k === 'Member' && t.name === 'Length') err('אי אפשר לשנות את Length של מערך — גודל המערך נקבע כשיוצרים אותו', line);
+      err('אי אפשר לבצע השמה לביטוי הזה', line);
+    }
+
+    function makeArray(elem, values) {
+      return { t: 'array', elem, v: values, id: ++arrSeq };
+    }
+    function buildArrLit(e, elemType) {
+      const vals = e.items.map((it, i) => {
+        if (it.k === 'ArrLit') { if (!elemType.endsWith('[]')) err('אתחול מקונן לא תקין', it.line); return buildArrLit(it, elemType.slice(0, -2)); }
+        return coerce(evalE(it), elemType, it.line, `איבר מספר ${i} במערך`);
+      });
+      const a = makeArray(elemType, vals);
+      pending.push({ kind: 'arrnew', arr: a.id });
+      msgs.push(`נוצר מערך ${elemType}[] עם ${vals.length} איברים`);
+      return a;
+    }
+
+    // ---- ביטויים ----
+    function evalE(e) {
+      tick(e.line);
+      switch (e.k) {
+        case 'Lit': return e.val;
+        case 'Interp': return V.str(e.parts.map(p => p.text !== undefined ? p.text : toCsString(evalE(p.expr))).join(''));
+        case 'Id': {
+          const r = lookup(e.name);
+          if (!r) {
+            if (methods.has(e.name)) err(`${e.name} היא פעולה — כדי לקרוא לה צריך סוגריים: ${e.name}(...)`, e.line);
+            err(`השם ${e.name} לא קיים בהקשר הזה. אולי שכחתם להגדיר את המשתנה, או שהוא הוגדר בפעולה אחרת?`, e.line);
+          }
+          if (!r.e.assigned) err(`שימוש במשתנה ${e.name} לפני שקיבל ערך. צריך לתת לו ערך התחלתי, למשל ${e.name} = 0`, e.line);
+          return r.e.val;
+        }
+        case 'Bin': {
+          if (e.op === '&&') { const a = evalE(e.l); if (!boolOf(a, e.line, 'צד של &&')) return V.bool(false); return V.bool(boolOf(evalE(e.r), e.line, 'צד של &&')); }
+          if (e.op === '||') { const a = evalE(e.l); if (boolOf(a, e.line, 'צד של ||')) return V.bool(true); return V.bool(boolOf(evalE(e.r), e.line, 'צד של ||')); }
+          return binop(e.op, evalE(e.l), evalE(e.r), e.line);
+        }
+        case 'Un': {
+          const v = evalE(e.e);
+          if (e.op === '!') return V.bool(!boolOf(v, e.line, 'הביטוי אחרי !'));
+          numOrErr(v, e.op, e.line);
+          if (e.op === '-') return v.t === 'double' ? V.dbl(-v.v) : V.int(-v.v);
+          return v.t === 'double' ? v : V.int(v.v);
+        }
+        case 'PreInc': case 'PostInc': {
+          const old = getL(e.target); numOrErr(old, e.op, e.line);
+          const d = e.op === '++' ? 1 : -1;
+          const nv = old.t === 'double' ? V.dbl(old.v + d) : old.t === 'char' ? V.chr(old.v + d) : V.int(old.v + d);
+          setL(e.target, nv, e.line);
+          return e.k === 'PreInc' ? nv : old;
+        }
+        case 'Assign': {
+          if (e.op === '=') {
+            let val;
+            if (e.value.k === 'ArrLit') {
+              const tt = e.target.k === 'Id' ? lookup(e.target.name) : null;
+              if (!tt || !tt.e.type.endsWith('[]')) err('אתחול עם { } אפשרי רק למשתנה מטיפוס מערך', e.line);
+              val = buildArrLit(e.value, tt.e.type.slice(0, -2));
+            } else val = evalE(e.value);
+            return setL(e.target, val, e.line);
+          }
+          const cur = getL(e.target); const rhs = evalE(e.value);
+          let res = binop(e.op[0], cur, rhs, e.line);
+          if (cur.t === 'char' && res.t === 'int') res = V.chr(res.v);
+          if (cur.t === 'int' && res.t === 'double') res = V.int(Math.trunc(res.v));
+          return setL(e.target, res, e.line);
+        }
+        case 'Cond': return boolOf(evalE(e.c), e.line, 'התנאי של ?:') ? evalE(e.a) : evalE(e.b);
+        case 'Cast': return explicitCast(evalE(e.e), e.type, e.line);
+        case 'Index': { const a = evalE(e.obj); const i = arrIndex(a, evalE(e.idx), e); return a.t === 'string' ? V.chr(a.v.charCodeAt(i)) : a.v[i]; }
+        case 'Member': return evalMember(e);
+        case 'Call': return evalCall(e);
+        case 'NewArr': {
+          if (e.size) {
+            const n = coerce(evalE(e.size), 'int', e.line, 'גודל המערך');
+            if (n.v < 0) err(`אי אפשר ליצור מערך בגודל שלילי (${n.v})`, e.line);
+            if (n.v > 100000) err(`המערך גדול מדי להדמיה (${n.v} תאים)`, e.line);
+            if (e.init) {
+              if (e.init.items.length !== n.v) err(`גודל המערך (${n.v}) לא תואם למספר הערכים בסוגריים (${e.init.items.length})`, e.line);
+              return buildArrLit(e.init, e.elem);
+            }
+            const a = makeArray(e.elem, Array.from({ length: n.v }, () => defaultFor(e.elem)));
+            pending.push({ kind: 'arrnew', arr: a.id });
+            msgs.push(`נוצר מערך חדש ${e.elem}[${n.v}] — כל התאים מקבלים ${toDisplay(defaultFor(e.elem))}`);
+            return a;
+          }
+          return buildArrLit(e.init, e.elem);
+        }
+        case 'NewObj':
+          if (e.type === 'Random') { msgs.push('נוצר מחולל מספרים אקראיים (Random)'); return { t: 'Random', v: null }; }
+          err(`יצירת אובייקט מסוג ${e.type} לא נתמכת באתר הזה`, e.line);
+        case 'ArrLit': err('אתחול עם { } או [ ] אפשרי רק בהגדרת משתנה מערך', e.line);
+      }
+      err('ביטוי לא נתמך', e.line);
+    }
+
+    function isStaticClassRef(e) {
+      return e.k === 'Id' && !lookup(e.name) && (STATIC_CLASSES.has(e.name) || classNames.has(e.name));
+    }
+    function evalMember(e) {
+      if (isStaticClassRef(e.obj)) {
+        const c = e.obj.name;
+        if ((c === 'int' || c === 'Int32') && e.name === 'MaxValue') return V.int(2147483647);
+        if ((c === 'int' || c === 'Int32') && e.name === 'MinValue') return V.int(-2147483648);
+        if (c === 'Math' && e.name === 'PI') return V.dbl(Math.PI);
+        if (classNames.has(c) && fields.has(e.name)) return fields.get(e.name).val;
+        err(`${c}.${e.name} לא נתמך`, e.line);
+      }
+      const o = evalE(e.obj);
+      if (e.name === 'Length') {
+        if (o.t === 'array' || o.t === 'string') return V.int(o.v.length);
+        if (o.t === 'null') err(`${exprName(e.obj)} הוא null — אין לו Length (NullReferenceException)`, e.line);
+      }
+      if (e.name === 'length') err('ב-C# כותבים Length באות גדולה', e.line);
+      err(`ל-${typeOf(o)} אין תכונה בשם ${e.name}`, e.line);
+    }
+
+    const args = (e, n, what) => { if (e.args.length !== n) err(`${what} מקבלת ${n} ארגומנטים, אבל נשלחו ${e.args.length}`, e.line); return e.args.map(evalE); };
+
+    function consoleText(v) {
+      if (v.t === 'array' && v.elem === 'char') return v.v.map(c => String.fromCharCode(c.v)).join('');
+      return toCsString(v);
+    }
+
+    function evalCall(e) {
+      const cal = e.callee;
+      if (cal.k === 'Id') {
+        if (cal.name === 'WriteLine' || cal.name === 'print' || cal.name === 'printf') err(`הפעולה ${cal.name} לא קיימת. כדי להדפיס כותבים Console.WriteLine(...)`, e.line);
+        return callUser(cal.name, e);
+      }
+      if (cal.k === 'Member') {
+        if (isStaticClassRef(cal.obj)) {
+          const c = cal.obj.name, m = cal.name;
+          if (classNames.has(c)) return callUser(m, e);
+          if (c === 'Console') {
+            if (m === 'WriteLine' || m === 'Write') {
+              let s = '';
+              if (e.args.length > 1 && e.args[0].k === 'Lit' && e.args[0].val.t === 'string') {
+                const vals = e.args.slice(1).map(evalE);
+                s = e.args[0].val.v.replace(/\{(\d+)(:[^}]*)?\}/g, (_, n) => vals[+n] ? toCsString(vals[+n]) : '');
+              } else if (e.args.length === 1) s = consoleText(evalE(e.args[0]));
+              else if (e.args.length > 1) err(`Console.${m} מקבלת ערך אחד להדפסה. כדי לחבר כמה ערכים השתמשו ב-+`, e.line);
+              out += s + (m === 'WriteLine' ? '\n' : '');
+              msgs.push('הדפסה: ' + (s || '(שורה ריקה)'));
+              return V.nul();
+            }
+            if (m === 'ReadLine') { const s = readLine(); out += s + '\n'; msgs.push('קלט מהמשתמש: ' + s); return V.str(s); }
+            if (m === 'Clear') { out = ''; return V.nul(); }
+            if (m === 'ReadKey') return V.nul();
+          }
+          if (c === 'Math') {
+            const a = e.args.map(evalE); a.forEach(x => numOrErr(x, 'Math.' + m, e.line));
+            const allInt = a.every(x => x.t !== 'double');
+            const pick = n => allInt ? V.int(n) : V.dbl(n);
+            switch (m) {
+              case 'Max': return pick(Math.max(a[0].v, a[1].v));
+              case 'Min': return pick(Math.min(a[0].v, a[1].v));
+              case 'Abs': return pick(Math.abs(a[0].v));
+              case 'Pow': return V.dbl(Math.pow(a[0].v, a[1].v));
+              case 'Sqrt': return V.dbl(Math.sqrt(a[0].v));
+              case 'Round': return V.dbl(Math.round(a[0].v));
+              case 'Floor': return V.dbl(Math.floor(a[0].v));
+              case 'Ceiling': return V.dbl(Math.ceil(a[0].v));
+            }
+          }
+          if ((c === 'string' || c === 'String') && m === 'Join') {
+            const [sep, arr] = args(e, 2, 'string.Join');
+            if (arr.t !== 'array') err('string.Join מקבלת מפריד ומערך', e.line);
+            return V.str(arr.v.map(toCsString).join(toCsString(sep)));
+          }
+          if ((c === 'string' || c === 'String') && m === 'IsNullOrEmpty') { const [s] = args(e, 1, m); return V.bool(s.t === 'null' || s.v === ''); }
+          if ((c === 'int' || c === 'Int32') && m === 'Parse' || (c === 'Convert' && m === 'ToInt32')) {
+            const [s] = args(e, 1, m);
+            if (s.t === 'string') { const t = s.v.trim(); if (!/^[-+]?\d+$/.test(t)) err(`לא ניתן להמיר "${s.v}" למספר שלם (FormatException)`, e.line); return V.int(parseInt(t, 10)); }
+            if (isNum(s)) return V.int(s.t === 'double' ? Math.round(s.v) : s.v);
+          }
+          if ((c === 'double' || c === 'Double') && m === 'Parse' || (c === 'Convert' && m === 'ToDouble')) {
+            const [s] = args(e, 1, m); const n = parseFloat(toCsString(s)); if (isNaN(n)) err('לא ניתן להמיר למספר', e.line); return V.dbl(n);
+          }
+          if ((c === 'char' || c === 'Char') && m === 'Parse' || (c === 'Convert' && m === 'ToChar')) {
+            const [s] = args(e, 1, m); if (isNum(s)) return V.chr(s.v); if (s.t === 'string' && s.v.length === 1) return V.chr(s.v.charCodeAt(0)); err('char.Parse מצפה למחרוזת עם תו אחד', e.line);
+          }
+          if (c === 'Convert' && m === 'ToString') { const [s] = args(e, 1, m); return V.str(toCsString(s)); }
+          if (c === 'char' || c === 'Char') {
+            const [ch] = args(e, 1, 'char.' + m); const s = String.fromCharCode(ch.v);
+            switch (m) {
+              case 'IsDigit': return V.bool(/[0-9]/.test(s));
+              case 'IsLetter': return V.bool(/\p{L}/u.test(s));
+              case 'IsUpper': return V.bool(s !== s.toLowerCase());
+              case 'IsLower': return V.bool(s !== s.toUpperCase());
+              case 'ToUpper': return V.chr(s.toUpperCase().charCodeAt(0));
+              case 'ToLower': return V.chr(s.toLowerCase().charCodeAt(0));
+            }
+          }
+          if (c === 'Array' && (m === 'Sort' || m === 'Reverse')) {
+            const [a] = args(e, 1, 'Array.' + m);
+            if (m === 'Sort') a.v.sort((x, y) => x.t === 'string' ? (x.v < y.v ? -1 : x.v > y.v ? 1 : 0) : x.v - y.v); else a.v.reverse();
+            a.v.forEach((_, i) => pending.push({ kind: 'cell', arr: a.id, index: i }));
+            msgs.push(`Array.${m} סידר מחדש את המערך`);
+            return V.nul();
+          }
+          err(`${c}.${m}(...) לא נתמך באתר הזה`, e.line);
+        }
+        const o = evalE(cal.obj); const m = cal.name;
+        if (o.t === 'null') err(`${exprName(cal.obj)} הוא null (NullReferenceException)`, e.line);
+        if (o.t === 'Random') {
+          const a = e.args.map(x => coerce(evalE(x), 'int', e.line, 'ארגומנט ל-Next'));
+          let r;
+          if (m === 'Next') {
+            if (a.length === 0) r = Math.floor(Math.random() * 2147483647);
+            else if (a.length === 1) { if (a[0].v < 0) err('Next(max) מקבלת מספר לא שלילי', e.line); r = Math.floor(Math.random() * a[0].v); }
+            else { if (a[0].v > a[1].v) err(`ב-Next(min, max) המספר הראשון (${a[0].v}) חייב להיות קטן או שווה לשני (${a[1].v})`, e.line); r = a[0].v + Math.floor(Math.random() * (a[1].v - a[0].v)); }
+            msgs.push(`הוגרל ${r}`);
+            return V.int(r);
+          }
+          if (m === 'NextDouble') return V.dbl(Math.random());
+          err(`ל-Random אין פעולה ${m}. השתמשו ב-Next(min, max)`, e.line);
+        }
+        if (o.t === 'string') {
+          const a = e.args.map(evalE);
+          switch (m) {
+            case 'ToUpper': return V.str(o.v.toUpperCase());
+            case 'ToLower': return V.str(o.v.toLowerCase());
+            case 'Contains': return V.bool(o.v.includes(toCsString(a[0])));
+            case 'IndexOf': return V.int(o.v.indexOf(toCsString(a[0])));
+            case 'Substring': return V.str(a.length > 1 ? o.v.substr(a[0].v, a[1].v) : o.v.slice(a[0].v));
+            case 'Trim': return V.str(o.v.trim());
+            case 'ToCharArray': { const arr = makeArray('char', [...o.v].map(ch => V.chr(ch.charCodeAt(0)))); pending.push({ kind: 'arrnew', arr: arr.id }); return arr; }
+            case 'ToString': return o;
+          }
+        }
+        if (m === 'ToString') return V.str(toCsString(o));
+        if (o.t === 'array' && m === 'Length') err('Length הוא תכונה ולא פעולה — כותבים arr.Length בלי סוגריים', e.line);
+        err(`ל-${typeOf(o)} אין פעולה בשם ${m}`, e.line);
+      }
+      err('קריאה לא תקינה', e.line);
+    }
+
+    function callUser(name, e) {
+      const list = methods.get(name);
+      if (!list) {
+        const lower = [...methods.keys()].find(k => k.toLowerCase() === name.toLowerCase());
+        err(`הפעולה ${name} לא קיימת${lower ? `. התכוונתם ל-${lower}? (ב-C# יש הבדל בין אותיות גדולות לקטנות)` : ''}`, e.line);
+      }
+      const m = list.find(x => x.params.length === e.args.length);
+      if (!m) err(`הפעולה ${name} מקבלת ${list[0].params.length} פרמטרים, אבל בקריאה נשלחו ${e.args.length}`, e.line);
+      const vals = e.args.map((a, i) => coerce(evalE(a), m.params[i].type, a.line, `פרמטר ${m.params[i].name} של ${name}`));
+      const caller = top();
+      if (caller && caller.method.isStatic && !m.isStatic)
+        err(`הפעולה ${name} צריכה להיות static כדי שאפשר יהיה לקרוא לה מ-${caller.name}. כתבו: public static ${m.ret} ${name}(...)`, e.line);
+      return invoke(m, vals, caller ? caller.name : null);
+    }
+
+    function invoke(m, vals, callerName) {
+      if (stack.length >= MAX_DEPTH) err('יותר מדי קריאות מקוננות (StackOverflow) — אולי יש רקורסיה בלי תנאי עצירה?', m.line);
+      if (callerName) { if (!calledFrom.has(m.name)) calledFrom.set(m.name, new Set()); calledFrom.get(m.name).add(callerName); }
+      const scope = new Map();
+      m.params.forEach((p, i) => scope.set(p.name, { type: p.type, val: vals[i], assigned: true }));
+      const label = `${m.name}(${m.params.map((p, i) => p.type === 'string[]' ? p.name : p.name + ' = ' + toDisplay(vals[i])).join(', ')})`;
+      stack.push({ method: m, name: m.name, label, scopes: [scope], loops: [] });
+      const savedP = pending, savedM = msgs; pending = []; msgs = [];
+      step(m.line, m.name === 'Main' ? 'התוכנית מתחילה ב-Main' : `נכנסים לפעולה ${label}`, { kind: 'call' });
+      let result = V.nul();
+      try {
+        execBlock(m.body);
+        if (m.ret !== 'void') err(`הפעולה ${m.name} הגיעה לסוף בלי return — פעולה שמחזירה ${m.ret} חייבת להחזיר ערך`, m.line);
+      } catch (x) {
+        if (x instanceof ReturnSig) {
+          if (m.ret === 'void' && x.val) err(`הפעולה ${m.name} מוגדרת כ-void ולכן לא יכולה להחזיר ערך`, x.line);
+          if (m.ret !== 'void') {
+            if (!x.val) err(`הפעולה ${m.name} צריכה להחזיר ${m.ret} — כתבו return עם ערך`, x.line);
+            result = coerce(x.val, m.ret, x.line, `הערך המוחזר מ-${m.name}`);
+          }
+        } else if (x instanceof BreakSig || x instanceof ContinueSig) err('break/continue מחוץ ללולאה', m.line);
+        else throw x;
+      } finally { stack.pop(); }
+      pending = savedP; msgs = savedM;
+      if (m.ret !== 'void' && callerName) msgs.push(`${m.name} החזירה ${toDisplay(result)}`);
+      return result;
+    }
+
+    // ---- הוראות ----
+    function execBlock(b) {
+      const f = top(); f.scopes.push(new Map());
+      try { for (const s of b.body) exec(s); } finally { f.scopes.pop(); }
+    }
+    function loopBody(s) {
+      try { exec(s); } catch (x) { if (x instanceof ContinueSig) return 'c'; if (x instanceof BreakSig) return 'b'; throw x; }
+      return '';
+    }
+    function exec(s) {
+      tick(s.line);
+      const f = top();
+      switch (s.k) {
+        case 'Block': return execBlock(s);
+        case 'Empty': return;
+        case 'VarDecl': {
+          for (const d of s.decls) {
+            let val;
+            if (d.init) {
+              if (d.init.k === 'ArrLit') {
+                if (!s.type.endsWith('[]')) err(`אתחול עם { } אפשרי רק למערך, ו-${d.name} הוא ${s.type}`, d.line);
+                val = buildArrLit(d.init, s.type.slice(0, -2));
+              } else val = evalE(d.init);
+              if (s.type === 'var') { if (val.t === 'null') err('אי אפשר להגדיר var עם null', d.line); }
+              else val = coerce(val, s.type, d.line, 'אתחול ' + d.name);
+            } else if (s.type === 'var') err('משתנה var חייב לקבל ערך מיד בהגדרה', d.line);
+            const type = s.type === 'var' ? typeOf(val) : s.type;
+            declare(d.name, type, val, d.line);
+            if (val) { pending.push({ kind: 'var', frame: stack.length - 1, name: d.name }); msgs.push(`${d.name} = ${toDisplay(val)}`); }
+            else { pending.push({ kind: 'var', frame: stack.length - 1, name: d.name }); msgs.push(`הוגדר משתנה ${d.name} (עוד בלי ערך)`); }
+          }
+          step(s.line);
+          return;
+        }
+        case 'ExprStmt': {
+          evalE(s.expr);
+          step(s.line, msgs.length ? null : s.src);
+          return;
+        }
+        case 'If': {
+          const c = boolOf(evalE(s.cond), s.line);
+          step(s.line, `בדיקת תנאי: ${s.csrc} ← ${c ? 'true' : 'false'}`, { kind: 'cond' });
+          if (c) exec(s.then); else if (s.els) exec(s.els);
+          return;
+        }
+        case 'While': case 'DoWhile': {
+          const loop = { kind: 'while', iter: 0, line: s.line, vars: [] };
+          f.loops.push(loop);
+          try {
+            for (;;) {
+              if (s.k === 'While' || loop.iter > 0) {
+                const c = boolOf(evalE(s.cond), s.line);
+                if (!c) { step(s.line, `בדיקת תנאי: ${s.csrc} ← false — יוצאים מהלולאה`, { kind: 'loopend' }); break; }
+                loop.iter++;
+                step(s.line, `סיבוב ${loop.iter}: ${s.csrc} ← true`, { kind: 'loop' });
+              } else { loop.iter++; step(s.line, `סיבוב ${loop.iter} (do)`, { kind: 'loop' }); }
+              if (loopBody(s.body) === 'b') break;
+            }
+          } finally { f.loops.pop(); }
+          return;
+        }
+        case 'For': {
+          f.scopes.push(new Map());
+          const loopVars = [];
+          s.init.forEach(st => { if (st.k === 'VarDecl') st.decls.forEach(d => loopVars.push(d.name)); else if (st.expr.k === 'Assign' && st.expr.target.k === 'Id') loopVars.push(st.expr.target.name); });
+          const loop = { kind: 'for', iter: 0, line: s.line, vars: loopVars };
+          f.loops.push(loop);
+          try {
+            for (const st of s.init) { if (st.k === 'VarDecl') exec({ ...st, line: s.line }); else evalE(st.expr); }
+            if (s.init.length && s.init[0].k !== 'VarDecl') step(s.line, `אתחול הלולאה: ${s.isrc}`, { kind: 'loopinit' });
+            else if (s.init.length && steps.length) { const last = steps[steps.length - 1]; if (last) { last.desc = `אתחול הלולאה: ${last.desc}`; last.kind = 'loopinit'; } }
+            for (;;) {
+              if (s.cond) {
+                const c = boolOf(evalE(s.cond), s.line);
+                if (!c) { step(s.line, `בדיקת תנאי: ${s.csrc} ← false — יוצאים מהלולאה`, { kind: 'loopend' }); break; }
+                loop.iter++;
+                step(s.line, `סיבוב ${loop.iter}: בודקים ${s.csrc} ← true`, { kind: 'loop' });
+              } else { loop.iter++; step(s.line, `סיבוב ${loop.iter}`, { kind: 'loop' }); }
+              if (loopBody(s.body) === 'b') break;
+              for (const u of s.update) evalE(u);
+              if (s.update.length) step(s.line, `עדכון: ${s.usrc} ← ${msgs.join(', ')}`, { kind: 'update' });
+            }
+          } finally { f.loops.pop(); f.scopes.pop(); }
+          return;
+        }
+        case 'Foreach': {
+          const it = evalE(s.iter);
+          if (it.t !== 'array' && it.t !== 'string') err('foreach עובר רק על מערך או מחרוזת', s.line);
+          const loop = { kind: 'foreach', iter: 0, line: s.line, vars: [], arr: it.t === 'array' ? it.id : null, idx: 0 };
+          f.loops.push(loop);
+          try {
+            const n = it.v.length;
+            for (let k = 0; k < n; k++) {
+              const el = it.t === 'string' ? V.chr(it.v.charCodeAt(k)) : it.v[k];
+              f.scopes.push(new Map());
+              try {
+                declare(s.name, s.type === 'var' ? typeOf(el) : s.type, coerce(el, s.type, s.line, 'משתנה ה-foreach'), s.line);
+                loop.iter = k + 1; loop.idx = k;
+                pending.push({ kind: 'var', frame: stack.length - 1, name: s.name });
+                step(s.line, `סיבוב ${k + 1}: ${s.name} = ${toDisplay(el)} (תא ${k})`, { kind: 'loop' });
+                const r = loopBody(s.body);
+                if (r === 'b') break;
+              } finally { f.scopes.pop(); }
+            }
+            step(s.line, `עברנו על כל ${s.isrc} — יוצאים מהלולאה`, { kind: 'loopend' });
+          } finally { f.loops.pop(); }
+          return;
+        }
+        case 'Return': {
+          const v = s.expr ? evalE(s.expr) : null;
+          step(s.line, v ? `return ${s.src} ← מחזירים ${toDisplay(v)}` : 'return — יוצאים מהפעולה', { kind: 'return' });
+          const r = new ReturnSig(v); r.line = s.line; throw r;
+        }
+        case 'Break': step(s.line, 'break — יוצאים מהלולאה'); throw new BreakSig();
+        case 'Continue': step(s.line, 'continue — ממשיכים לסיבוב הבא'); throw new ContinueSig();
+      }
+      err('הוראה לא נתמכת', s.line);
+    }
+
+    function initFields() {
+      stack.push({ method: { isStatic: true }, name: '(fields)', label: '', scopes: [new Map()], loops: [] });
+      try {
+        for (const c of prog.classes) for (const fd of c.fields) {
+          let val = defaultFor(fd.type);
+          if (fd.init) val = fd.init.k === 'ArrLit' ? buildArrLit(fd.init, fd.type.slice(0, -2)) : coerce(evalE(fd.init), fd.type, fd.line, 'שדה ' + fd.name);
+          fields.set(fd.name, { type: fd.type, val, assigned: true });
+        }
+      } finally { stack.pop(); pending = []; msgs = []; }
+    }
+
+    return {
+      methods,
+      runMain() {
+        const mains = methods.get('Main');
+        if (!mains) throw new CSError('לא נמצאה הפעולה Main — התוכנית הראשית: static void Main(string[] args) { ... }', 1, 'compile');
+        const m = mains[0];
+        initFields();
+        let error = null;
+        try { invoke(m, m.params.length ? [makeArray('string', [])] : [], null); }
+        catch (x) { if (x instanceof CSError) error = x; else if (x instanceof RangeError) error = new CSError('יותר מדי קריאות מקוננות (StackOverflow)', 0); else throw x; }
+        if (!error) step(0, 'התוכנית הסתיימה', { kind: 'end' });
+        else if (trace) { steps.push({ ...(steps[steps.length - 1] || { frames: [], arrays: {}, changes: [] }), line: error.line, desc: 'שגיאה: ' + error.message, kind: 'error', out, changes: [] }); }
+        return { steps, out, error, truncated, calledFrom };
+      },
+      call(m, vals) {
+        initFields();
+        return invoke(m, vals, '__test__');
+      },
+    };
+  }
+
+  function parse(src) { return Parser(src).program(); }
+
+  // ---- המרות בין JS ל-C# (לבדיקות אוטומטיות) ----
+  function fromJS(x, type) {
+    type = normType(type);
+    if (type.endsWith('[]')) {
+      const el = type.slice(0, -2);
+      return { t: 'array', elem: el, v: x.map(y => fromJS(y, el)), id: 900000 + Math.floor(Math.random() * 99999) };
+    }
+    switch (type) {
+      case 'int': return V.int(x);
+      case 'double': return V.dbl(x);
+      case 'char': return V.chr(String(x).charCodeAt(0));
+      case 'bool': return V.bool(x);
+      case 'string': return V.str(x);
+    }
+    throw new Error('type ' + type);
+  }
+  function toJS(v) {
+    switch (v.t) {
+      case 'array': return v.v.map(toJS);
+      case 'char': return String.fromCharCode(v.v);
+      case 'null': return null;
+      default: return v.v;
+    }
+  }
+
+  return { parse, Interpreter, CSError, fromJS, toJS, toDisplay, normType, typeOf };
+})();
+if (typeof module !== 'undefined') module.exports = CSharp;
+
+</script>
+<script>
+/* =====================================================================
+   השאלות — כדי להוסיף שאלה, העתיקו אובייקט שלם והוסיפו אותו לסוף הרשימה.
+
+   מבנה שאלה:
+   id        — מספר השאלה
+   title     — כותרת קצרה (מופיעה בלשונית)
+   task      — נוסח המשימה (אפשר כמה פסקאות, כמערך של מחרוזות)
+   followups — שאלות ההמשך. לכל אחת:
+                 q:       נוסח השאלה
+                 accept:  רשימת תשובות נכונות (משווים בלי רווחים, בלי הבדלי אותיות גדולות/קטנות,
+                          וכל סוגי הגרשיים נחשבים זהים)
+                 pattern: לחלופין — ביטוי רגולרי שהתשובה המנורמלת צריכה להתאים לו
+                 array:   לחלופין — מערך תשובה. התלמיד יכול לכתוב עם או בלי { }
+                 check:   לחלופין — פונקציה (raw, norm) => true/false
+                 hint:    רמז שמופיע אחרי תשובה שגויה
+                 ok:      (לא חובה) הודעה שמופיעה אחרי תשובה נכונה
+   demo      — ההדמיה של "מה צריך לקרות":
+                 inputs: [{ name, value }] או [{ name, array: [...] }]
+                 output: { array: [...] } או { name, value }
+                 note:   הערה קטנה מתחת להדמיה (לא חובה)
+                 shuffle:[min,max] — אנימציית הגרלה בתאי הפלט (לא חובה)
+   signature — איך הפעולה של התלמיד צריכה להיראות: { returns: 'int[]', params: ['int'] }
+   tests     — בדיקות אוטומטיות שמריצות את הפעולה של התלמיד:
+                 { args: [...], expect: ... }  — השוואה רגילה (char נכתב כמחרוזת של תו אחד)
+                 { name, run: call => null או הודעת שגיאה }  — בדיקה מותאמת אישית
+   starter   — הקוד שמופיע בעורך בהתחלה
+   ===================================================================== */
+
+const STARTER = (methodHint, mainHint) => `using System;
+
+class Program
+{
+    // ${methodHint}
+
+
+    static void Main(string[] args)
+    {
+        // ${mainHint}
+
+    }
+}
+`;
+
+const QUESTIONS = [
+  {
+    id: 1,
+    title: 'יצירת מערך ריק',
+    task: [
+      'כתבו פעולה שמקבלת מספר ומחזירה מערך.',
+      'הפעולה תיצור מערך int ריק בגודל המספר שהתקבל ותחזיר את המערך.',
+    ],
+    followups: [
+      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?$/, hint: 'הפעולה מקבלת מספר שלם אחד. כתבו טיפוס ושם, למשל: int num' },
+      { q: 'מה הפעולה מחזירה?', accept: ['int[]'], hint: 'היא מחזירה מערך של מספרים שלמים — הטיפוס ואחריו סוגריים מרובעים.' },
+      { q: 'איך המערך צריך להיראות בסיום אם num הוא 10?', array: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0'], hint: 'במערך יש 10 תאים. איזה ערך מקבל כל תא כשיוצרים מערך int חדש?' },
+    ],
+    demo: {
+      inputs: [{ name: 'num', value: '10' }],
+      output: { array: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0'] },
+      note: 'כשיוצרים מערך int חדש, כל התאים מתחילים ב-0.',
+    },
+    signature: { returns: 'int[]', params: ['int'] },
+    tests: [
+      { args: [10], expect: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+      { args: [3], expect: [0, 0, 0] },
+      { args: [1], expect: [0] },
+    ],
+    starter: STARTER('כתבו כאן את הפעולה', 'קראו לפעולה עם המספר 10 והדפיסו את המערך שחזר'),
+  },
+  {
+    id: 2,
+    title: 'מערך של תווים',
+    task: [
+      'כתבו פעולה שמקבלת מספר ותו ומחזירה מערך של תווים.',
+      'הפעולה תיצור מערך char ריק בגודל המספר שהתקבל ותשים בכל תא את התו שהתקבל.',
+    ],
+    followups: [
+      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?,char([a-z_]\w*)?$/, hint: 'שני פרמטרים, מופרדים בפסיק: קודם המספר ואחריו התו. למשל: int num, char c' },
+      { q: 'מה הפעולה מחזירה?', accept: ['char[]'], hint: 'מערך של תווים — הטיפוס של תו ואחריו סוגריים מרובעים.' },
+      { q: "איך המערך צריך להיראות בסיום אם num הוא 4 ו-c הוא '#'?", array: ["'#'", "'#'", "'#'", "'#'"], hint: "במערך 4 תאים, ובכל תא נמצא התו '#'. כתבו את האיברים בתוך { } מופרדים בפסיקים." },
+    ],
+    demo: {
+      inputs: [{ name: 'num', value: '4' }, { name: 'c', value: "'#'" }],
+      output: { array: ["'#'", "'#'", "'#'", "'#'"] },
+      note: 'לולאת for עוברת על כל התאים ושמה בכל אחד את התו c.',
+    },
+    signature: { returns: 'char[]', params: ['int', 'char'] },
+    tests: [
+      { args: [4, '#'], expect: ['#', '#', '#', '#'] },
+      { args: [2, 'a'], expect: ['a', 'a'] },
+      { args: [6, '*'], expect: ['*', '*', '*', '*', '*', '*'] },
+    ],
+    starter: STARTER('כתבו כאן את הפעולה', "קראו לפעולה עם 4 ו-'#' והדפיסו את המערך שחזר"),
+  },
+  {
+    id: 3,
+    title: 'הגרלת מספרים',
+    task: [
+      'כתבו פעולה שלא מקבלת כלום ומחזירה מערך.',
+      'הפעולה תיצור מערך int ריק בגודל 5 ותגריל לתוכו מספרים אקראיים מ-1 עד 10.',
+    ],
+    followups: [
+      { q: 'מה הפעולה מקבלת?', accept: ['כלום', 'שוםדבר', 'אין', 'לאמקבלת', 'לאמקבלתכלום', 'כלוםלא', '()', 'nothing', 'none', '-'], hint: 'קראו שוב את המשפט הראשון של המשימה.' },
+      { q: 'מה הפעולה מחזירה?', accept: ['int[]'], hint: 'מערך של מספרים שלמים.' },
+      {
+        q: 'איך המערך צריך להיראות בסיום? (תנו דוגמה)',
+        check: (raw, norm) => {
+          const items = norm.replace(/^[{[]|[}\]]$/g, '').split(',');
+          return items.length === 5 && items.every(x => /^\d+$/.test(x) && +x >= 1 && +x <= 10);
+        },
+        hint: 'כתבו 5 מספרים בין 1 ל-10 בתוך { }, למשל {4,9,3,1,5}',
+        ok: 'נכון! בכל הרצה יוצאים מספרים אחרים — כל מערך של 5 מספרים בין 1 ל-10 מתאים.',
+      },
+    ],
+    demo: {
+      inputs: [],
+      output: { array: ['4', '9', '3', '1', '5'] },
+      shuffle: [1, 10],
+      note: 'המספרים אקראיים, ולכן בכל הרצה המערך ייראה אחרת. הגודל תמיד 5 והערכים תמיד בין 1 ל-10.',
+    },
+    signature: { returns: 'int[]', params: [] },
+    tests: [
+      {
+        name: 'המערך בגודל 5 וכל המספרים בין 1 ל-10',
+        run: call => {
+          for (let k = 0; k < 40; k++) {
+            const a = call();
+            if (a.length !== 5) return `המערך שחזר בגודל ${a.length}, אבל הוא צריך להיות בגודל 5`;
+            const bad = a.find(x => x < 1 || x > 10);
+            if (bad !== undefined) return `במערך הופיע המספר ${bad}, אבל מותר רק מספרים בין 1 ל-10`;
+          }
+          return null;
+        },
+      },
+      {
+        name: 'המספרים באמת אקראיים',
+        run: call => {
+          const seen = new Set();
+          for (let k = 0; k < 40; k++) call().forEach(x => seen.add(x));
+          if (seen.size <= 1) return 'כל התאים קיבלו את אותו מספר בכל ההרצות — האם הגרלתם מספר חדש לכל תא, בתוך הלולאה?';
+          return null;
+        },
+      },
+      {
+        name: 'גם 1 וגם 10 יכולים לצאת',
+        run: call => {
+          const seen = new Set();
+          for (let k = 0; k < 300; k++) call().forEach(x => seen.add(x));
+          if (!seen.has(10)) return 'המספר 10 אף פעם לא הוגרל. ב-rnd.Next(min, max) המספר max לא כלול — כדי לקבל 1 עד 10 כותבים rnd.Next(1, 11)';
+          if (!seen.has(1)) return 'המספר 1 אף פעם לא הוגרל. בדקו את המספר הראשון ב-Next.';
+          return null;
+        },
+      },
+    ],
+    starter: STARTER('כתבו כאן את הפעולה. כדי להגריל: Random rnd = new Random();  ואז  rnd.Next(1, 11)', 'קראו לפעולה והדפיסו את המערך שחזר'),
+  },
+  {
+    id: 4,
+    title: 'סכום המערך',
+    task: [
+      'כתבו פעולה שמקבלת מערך של int ומחזירה מספר.',
+      'הפעולה תחזיר את הסכום הכולל של המספרים במערך.',
+    ],
+    followups: [
+      { q: 'מה הפעולה מקבלת?', pattern: /^int\[\]([a-z_]\w*)?$/, hint: 'היא מקבלת מערך של מספרים שלמים, למשל: int[] arr' },
+      { q: 'מה הפעולה מחזירה?', accept: ['int'], hint: 'הסכום הוא מספר שלם אחד.' },
+      { q: 'אם המערך שהתקבל הוא {4,9,3,1,5}, מה יהיה המספר?', accept: ['22'], hint: 'חברו את כל המספרים: 4 + 9 + 3 + 1 + 5' },
+    ],
+    demo: {
+      inputs: [{ name: 'arr', array: ['4', '9', '3', '1', '5'] }],
+      output: { name: 'הסכום', value: '22' },
+      note: '4 + 9 + 3 + 1 + 5 = 22. משתנה סכום מתחיל ב-0, ובכל סיבוב של הלולאה מוסיפים לו את התא הנוכחי.',
+    },
+    signature: { returns: 'int', params: ['int[]'] },
+    tests: [
+      { args: [[4, 9, 3, 1, 5]], expect: 22 },
+      { args: [[10]], expect: 10 },
+      { args: [[]], expect: 0 },
+      { args: [[-3, 3, 7, 1]], expect: 8 },
+    ],
+    starter: STARTER('כתבו כאן את הפעולה', 'צרו מערך {4, 9, 3, 1, 5}, שלחו אותו לפעולה והדפיסו את הסכום'),
+  },
+];
+
+</script>
+<script>
+/* =====================================================================
+   ממשק האתר
+   ===================================================================== */
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const h = (tag, attrs, ...kids) => {
+    const el = document.createElement(tag);
+    if (attrs) for (const [k, v] of Object.entries(attrs)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'text') el.textContent = v;
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+    for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(kid));
+    return el;
+  };
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- שמירה בדפדפן ----------
+  const KEY = 'cs-arrays-lab-v1';
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  const qs = id => (saved[id] = saved[id] || { answers: {}, correct: {}, code: null, done: false });
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { /* לא קריטי */ } };
+
+  let current = QUESTIONS[0].id;
+  try { const last = +localStorage.getItem(KEY + ':current'); if (QUESTIONS.some(q => q.id === last)) current = last; } catch (e) {}
+  const Q = () => QUESTIONS.find(q => q.id === current);
+
+  // ---------- נרמול תשובות ----------
+  const norm = s => String(s || '')
+    .replace(/[׳’‘`´"״“”]/g, "'")
+    .replace(/\s+/g, '')
+    .toLowerCase();
+  const stripQ = s => s.replace(/^'(.*)'$/, '$1');
+  function isCorrect(f, raw) {
+    const n = norm(raw);
+    if (!n) return false;
+    if (f.check) return !!f.check(raw, n);
+    if (f.pattern) return f.pattern.test(n);
+    if (f.array) {
+      const inner = n.replace(/^[{[]/, '').replace(/[}\]]$/, '');
+      const items = inner === '' ? [] : inner.split(',');
+      return items.length === f.array.length && items.every((x, i) => stripQ(x) === stripQ(norm(f.array[i])));
+    }
+    return (f.accept || []).some(a => norm(a) === n);
+  }
+
+  // ---------- עורך קוד ----------
+  let cm = null, textarea = null;
+  function initEditor() {
+    const host = $('#editor');
+    if (window.CodeMirror) {
+      cm = CodeMirror(host, {
+        mode: 'text/x-csharp', theme: 'lab', lineNumbers: true, indentUnit: 4, tabSize: 4,
+        indentWithTabs: false, matchBrackets: true, autoCloseBrackets: true, direction: 'ltr',
+        extraKeys: {
+          Tab: c => c.somethingSelected() ? c.indentSelection('add') : c.replaceSelection('    ', 'end'),
+          'Ctrl-Enter': () => runCode(), 'Cmd-Enter': () => runCode(),
+        },
+      });
+      cm.on('change', () => { clearMarks(); saveCodeSoon(); });
+    } else {
+      textarea = h('textarea', { class: 'fallback-editor', spellcheck: 'false', dir: 'ltr', 'aria-label': 'עורך קוד' });
+      textarea.addEventListener('input', saveCodeSoon);
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Tab') { e.preventDefault(); const s = textarea.selectionStart; textarea.setRangeText('    ', s, textarea.selectionEnd, 'end'); }
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runCode();
+      });
+      host.append(textarea);
+    }
+  }
+  const getCode = () => cm ? cm.getValue() : textarea.value;
+  const setCode = s => { if (cm) { cm.setValue(s); cm.clearHistory(); } else textarea.value = s; };
+  let saveTimer = null;
+  function saveCodeSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { qs(current).code = getCode(); persist(); }, 400); }
+  let marked = [];
+  function clearMarks() { if (!cm) return; marked.forEach(([l, c]) => cm.removeLineClass(l, 'background', c)); marked = []; }
+  function markLine(line, cls) {
+    if (!cm || !line) return;
+    const l = line - 1; if (l < 0 || l >= cm.lineCount()) return;
+    cm.addLineClass(l, 'background', cls); marked.push([l, cls]);
+  }
+  function runLine(line) {
+    if (!cm) return;
+    marked.filter(m => m[1] === 'run-line').forEach(([l, c]) => cm.removeLineClass(l, 'background', c));
+    marked = marked.filter(m => m[1] !== 'run-line');
+    if (line) { markLine(line, 'run-line'); cm.scrollIntoView({ line: line - 1, ch: 0 }, 60); }
+  }
+
+  // ---------- לשוניות ----------
+  function renderTabs() {
+    const nav = $('#tabs'); nav.innerHTML = '';
+    QUESTIONS.forEach(q => {
+      const st = qs(q.id);
+      nav.append(h('button', {
+        class: 'tab' + (q.id === current ? ' on' : '') + (st.done ? ' done' : ''),
+        'aria-current': q.id === current ? 'page' : null,
+        title: q.title, onclick: () => go(q.id),
+      }, h('span', { class: 'tab-n', text: st.done ? '✓' : String(q.id) }), h('span', { class: 'tab-t', text: q.title })));
+    });
+    const done = QUESTIONS.filter(q => qs(q.id).done).length;
+    $('#progress').textContent = `${done} מתוך ${QUESTIONS.length} שאלות הושלמו`;
+  }
+  function go(id) {
+    if (player) player.stop();
+    qs(current).code = getCode(); persist();
+    current = id;
+    try { localStorage.setItem(KEY + ':current', String(id)); } catch (e) {}
+    renderAll();
+    window.scrollTo({ top: 0 }); document.querySelectorAll('.pane-q, .pane-sim').forEach(p => p.scrollTop = 0);
+  }
+
+  // ---------- צד ימין: שאלה ----------
+  function unlocked(q) { return q.followups.every((_, i) => qs(q.id).correct[i]); }
+
+  function renderQuestion() {
+    const q = Q(), st = qs(q.id);
+    $('#q-num').textContent = `שאלה ${q.id}`;
+    $('#q-title').textContent = q.title;
+    const task = $('#q-task'); task.innerHTML = '';
+    q.task.forEach(p => task.append(h('p', { text: p })));
+
+    const list = $('#followups'); list.innerHTML = '';
+    q.followups.forEach((f, i) => {
+      const id = `f-${q.id}-${i}`;
+      const input = h('input', { id, type: 'text', dir: 'ltr', autocomplete: 'off', spellcheck: 'false', value: st.answers[i] || '' });
+      const msg = h('div', { class: 'f-msg', role: 'status', 'aria-live': 'polite' });
+      const item = h('div', { class: 'f-item' + (st.correct[i] ? ' ok' : '') },
+        h('label', { for: id, class: 'f-q', text: f.q }),
+        h('div', { class: 'f-row' }, input,
+          h('button', { class: 'btn btn-check', type: 'button', onclick: () => check() }, 'בדיקה')),
+        msg);
+      if (st.correct[i]) { input.readOnly = true; msg.textContent = f.ok || 'נכון!'; msg.className = 'f-msg good'; }
+      function check() {
+        if (st.correct[i]) return;
+        st.answers[i] = input.value; persist();
+        if (!input.value.trim()) { msg.textContent = 'כתבו תשובה בתיבה ואז לחצו על בדיקה.'; msg.className = 'f-msg'; return; }
+        if (isCorrect(f, input.value)) {
+          st.correct[i] = true; persist();
+          item.classList.add('ok'); input.readOnly = true;
+          msg.textContent = f.ok || 'נכון!'; msg.className = 'f-msg good';
+          const nextInput = $(`#f-${q.id}-${i + 1}`);
+          if (nextInput && !nextInput.readOnly) nextInput.focus();
+          if (unlocked(q)) { renderCodeArea(true); renderSim(); }
+        } else {
+          msg.textContent = 'לא בדיוק. ' + (f.hint || 'נסו שוב.');
+          msg.className = 'f-msg bad';
+          item.classList.remove('shake'); void item.offsetWidth; item.classList.add('shake');
+        }
+      }
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+      input.addEventListener('input', () => { st.answers[i] = input.value; persist(); });
+      list.append(item);
+    });
+  }
+
+  function renderCodeArea(justUnlocked) {
+    const q = Q(), st = qs(q.id);
+    const open = unlocked(q);
+    const sec = $('#code-section');
+    sec.classList.toggle('locked', !open);
+    $('#code-lock').hidden = open;
+    $('#code-body').hidden = !open;
+    if (open) {
+      setCode(st.code !== null ? st.code : q.starter);
+      if (cm) setTimeout(() => cm.refresh(), 0);
+      if (justUnlocked) {
+        sec.classList.add('reveal');
+        setTimeout(() => sec.classList.remove('reveal'), 900);
+        sec.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      }
+    }
+    $('#results').innerHTML = '';
+    $('#results').hidden = true;
+  }
+
+  // ---------- רכיבי הדמיה ----------
+  function varBox(name, value, opts = {}) {
+    return h('div', { class: 'var' + (opts.changed ? ' changed' : '') + (opts.unassigned ? ' unassigned' : '') + (opts.big ? ' big' : '') },
+      h('div', { class: 'var-val', dir: 'ltr', text: value }),
+      h('div', { class: 'var-stem', 'aria-hidden': 'true' }),
+      h('div', { class: 'var-box' + (/[\u0590-\u05FF]/.test(name) ? ' he' : ''), dir: 'auto', text: name }),
+      opts.type ? h('div', { class: 'var-type', dir: 'ltr', text: opts.type }) : null);
+  }
+  const MAX_CELLS = 40;
+  function arrayView(name, values, opts = {}) {
+    const cells = h('div', { class: 'cells', dir: 'ltr' });
+    const shown = values.slice(0, MAX_CELLS);
+    shown.forEach((v, i) => {
+      const ptrs = (opts.pointers || []).filter(p => p.index === i).map(p => p.name);
+      const cell = h('div', {
+        class: 'cell' + (opts.changed && opts.changed.has(i) ? ' drop' : '') + (opts.isNew ? ' born' : '') + (ptrs.length ? ' here' : ''),
+        style: opts.isNew && !reduceMotion ? `animation-delay:${Math.min(i, 20) * 35}ms` : null,
+      },
+        ptrs.length ? h('div', { class: 'ptr', text: ptrs.join(',') }) : null,
+        h('div', { class: 'cell-v', text: v }),
+        h('div', { class: 'cell-i', text: String(i) }));
+      cells.append(cell);
+    });
+    const outPtr = (opts.pointers || []).find(p => p.index >= values.length && values.length <= MAX_CELLS);
+    if (outPtr) cells.append(h('div', { class: 'cell out' },
+      h('div', { class: 'ptr', text: outPtr.name }),
+      h('div', { class: 'cell-v', text: '✗' }),
+      h('div', { class: 'cell-i', text: String(outPtr.index) })));
+    if (values.length > MAX_CELLS) cells.append(h('div', { class: 'cell more', text: `…ועוד ${values.length - MAX_CELLS}` }));
+    if (!values.length) cells.append(h('div', { class: 'cell empty', text: 'מערך ריק' }));
+    return h('div', { class: 'arr' },
+      name || opts.type ? h('div', { class: 'arr-head', dir: 'ltr' }, h('span', { class: 'arr-name', text: name }), opts.type ? h('span', { class: 'arr-type', text: opts.type }) : null) : null,
+      h('div', { class: 'cells-scroll' }, cells));
+  }
+
+  // ---------- צד שמאל: הדמיה ----------
+  let shuffleTimer = null;
+  function renderSim() {
+    const q = Q();
+    const root = $('#sim-body'); root.innerHTML = '';
+    clearInterval(shuffleTimer);
+    if (!unlocked(q)) {
+      root.append(h('div', { class: 'sim-empty' },
+        h('div', { class: 'empty-cells', 'aria-hidden': 'true' }, ...[0, 1, 2, 3, 4].map(() => h('div', { class: 'cell ghost' }, h('div', { class: 'cell-v', text: '?' })))),
+        h('p', { text: 'ענו נכון על שאלות ההכנה, וכאן תופיע הדמיה של מה שהפעולה צריכה לעשות.' })));
+      return;
+    }
+    root.append(expectedView(q));
+    root.append(h('section', { id: 'run-view', class: 'run-view', 'aria-label': 'הריצה של הקוד שלכם' },
+      h('h3', { class: 'sim-h', text: 'הריצה של הקוד שלכם' }),
+      h('p', { class: 'run-placeholder', text: 'כתבו את הקוד ולחצו על "הרצה". כאן תראו צעד אחרי צעד איך המשתנים והמערך מתמלאים.' })));
+  }
+
+  function expectedView(q) {
+    const d = q.demo;
+    const inputs = h('div', { class: 'io-side' }, h('div', { class: 'io-label', text: 'קלט' }));
+    const row = h('div', { class: 'io-items' });
+    if (!d.inputs.length) row.append(h('div', { class: 'io-none', text: 'הפעולה לא מקבלת כלום' }));
+    d.inputs.forEach(inp => row.append(inp.array ? arrayView(inp.name, inp.array) : varBox(inp.name, inp.value)));
+    inputs.append(row);
+
+    const output = h('div', { class: 'io-side' }, h('div', { class: 'io-label', text: 'פלט' }));
+    let outEl;
+    if (d.output.array) outEl = arrayView('', d.output.array);
+    else outEl = varBox(d.output.name, d.output.value, { big: true });
+    output.append(h('div', { class: 'io-items' }, outEl));
+
+    if (d.shuffle && !reduceMotion) {
+      const [lo, hi] = d.shuffle; let n = 0;
+      const vals = [...outEl.querySelectorAll('.cell-v')];
+      shuffleTimer = setInterval(() => {
+        n++;
+        vals.forEach((v, i) => { v.textContent = n >= 14 ? d.output.array[i] : String(lo + Math.floor(Math.random() * (hi - lo + 1))); });
+        if (n >= 14) clearInterval(shuffleTimer);
+      }, 70);
+    }
+    return h('section', { class: 'expected', 'aria-label': 'מה הפעולה צריכה לעשות' },
+      h('h3', { class: 'sim-h', text: 'מה הפעולה צריכה לעשות' }),
+      h('div', { class: 'io' }, inputs, h('div', { class: 'io-arrow', 'aria-hidden': 'true' }, h('span', { class: 'arrow-glyph', text: '←' }), h('span', { text: 'הפעולה' })), output),
+      d.note ? h('p', { class: 'io-note', text: d.note }) : null);
+  }
+
+  // ---------- נגן הצעדים ----------
+  let player = null;
+  function Player(steps, info) {
+    let idx = 0, timer = null;
+    const view = $('#run-view');
+    view.innerHTML = '';
+    const speeds = [1400, 900, 550, 300, 120];
+    let speedI = 2;
+    try { const s = +localStorage.getItem(KEY + ':speed'); if (s >= 0 && s < speeds.length) speedI = s; } catch (e) {}
+
+    const btn = (label, title, fn, cls) => h('button', { class: 'pbtn ' + (cls || ''), type: 'button', title, 'aria-label': title, onclick: fn }, label);
+    const playBtn = btn('▶', 'נגן', () => toggle(), 'play');
+    const counter = h('span', { class: 'counter', 'aria-live': 'off' });
+    const speed = h('input', { type: 'range', min: '0', max: String(speeds.length - 1), value: String(speedI), 'aria-label': 'מהירות' });
+    speed.addEventListener('input', () => { speedI = +speed.value; try { localStorage.setItem(KEY + ':speed', String(speedI)); } catch (e) {} if (timer) { pause(); play(); } });
+    const scrub = h('input', { type: 'range', class: 'scrub', min: '0', max: String(Math.max(0, steps.length - 1)), value: '0', 'aria-label': 'צעד' });
+    scrub.addEventListener('input', () => { pause(); show(+scrub.value); });
+
+    const controls = h('div', { class: 'controls' },
+      h('div', { class: 'pbtns', dir: 'ltr' },
+        btn('⏮', 'מההתחלה', () => { pause(); show(0); }),
+        btn('◀', 'צעד אחורה', () => { pause(); show(idx - 1); }),
+        playBtn,
+        btn('▶|', 'צעד קדימה', () => { pause(); show(idx + 1); }),
+        btn('⏭', 'לסוף', () => { pause(); show(steps.length - 1); })),
+      h('label', { class: 'speed' }, h('span', { text: 'מהירות' }), speed),
+      counter);
+    const desc = h('div', { class: 'desc', role: 'status', 'aria-live': 'polite' });
+    const stage = h('div', { class: 'stage' });
+    const con = h('pre', { class: 'console', dir: 'ltr' });
+    view.append(
+      h('h3', { class: 'sim-h', text: 'הריצה של הקוד שלכם' }),
+      controls, scrub, desc, stage,
+      h('div', { class: 'console-wrap' }, h('div', { class: 'console-title', text: 'פלט (מה שהודפס)' }), con),
+      info.truncated ? h('p', { class: 'note-small', text: 'הריצה ארוכה מאוד, ולכן מוצגים רק הצעדים הראשונים.' }) : null);
+
+    function show(i) {
+      idx = Math.max(0, Math.min(steps.length - 1, i));
+      scrub.value = String(idx);
+      const s = steps[idx];
+      counter.textContent = `צעד ${idx + 1} מתוך ${steps.length}`;
+      desc.className = 'desc k-' + (s.kind || 'plain');
+      desc.textContent = s.desc || '';
+      renderStage(stage, s);
+      con.textContent = s.out || '';
+      if (s.kind === 'error') con.append(h('span', { class: 'con-err', text: (s.out && !s.out.endsWith('\n') ? '\n' : '') + 'שגיאה: ' + s.desc.replace(/^שגיאה: /, '') }));
+      con.scrollTop = con.scrollHeight;
+      runLine(s.kind === 'end' ? 0 : s.line);
+      if (s.kind === 'error') { clearMarks(); markLine(s.line, 'err-line'); }
+      if (idx >= steps.length - 1) pause();
+    }
+    function tickPlay() { if (idx >= steps.length - 1) { pause(); return; } show(idx + 1); }
+    function play() { if (idx >= steps.length - 1) show(0); playBtn.textContent = '⏸'; playBtn.title = 'עצירה'; playBtn.setAttribute('aria-label', 'עצירה'); timer = setInterval(tickPlay, speeds[speedI]); }
+    function pause() { clearInterval(timer); timer = null; playBtn.textContent = '▶'; playBtn.title = 'נגן'; playBtn.setAttribute('aria-label', 'נגן'); }
+    function toggle() { timer ? pause() : play(); }
+    show(0);
+    if (steps.length > 1) play();
+    return { stop: pause };
+  }
+
+  function renderStage(stage, s) {
+    stage.innerHTML = '';
+    const changedVars = new Set(), changedCells = new Map(), newArrs = new Set();
+    (s.changes || []).forEach(c => {
+      if (c.kind === 'var') changedVars.add(c.frame + ':' + c.name);
+      if (c.kind === 'cell') { if (!changedCells.has(c.arr)) changedCells.set(c.arr, new Set()); changedCells.get(c.arr).add(c.index); }
+      if (c.kind === 'arrnew') newArrs.add(c.arr);
+    });
+    const frames = s.frames || [];
+    if (!frames.length) { stage.append(h('p', { class: 'run-placeholder', text: 'התוכנית הסתיימה.' })); return; }
+    for (let fi = frames.length - 1; fi >= 0; fi--) {
+      const f = frames[fi];
+      const isTop = fi === frames.length - 1;
+      const loop = f.loops && f.loops.length ? f.loops[f.loops.length - 1] : null;
+      const head = h('div', { class: 'frame-head' },
+        h('span', { class: 'frame-where', text: f.name === 'Main' ? 'התוכנית הראשית' : 'בתוך הפעולה' }),
+        h('code', { class: 'frame-label', dir: 'ltr', text: f.label }),
+        loop && isTop ? h('span', { class: 'loop-badge' + (s.kind === 'loop' ? ' pulse' : '') },
+          h('span', { class: 'loop-ico', 'aria-hidden': 'true', text: '↻' }),
+          `לולאת ${loop.kind} — סיבוב ${loop.iter || 0}`) : null);
+      const scalars = h('div', { class: 'scalars' });
+      const arrs = h('div', { class: 'arrays' });
+      // מצביעים: משתני לולאה
+      const pointers = [];
+      if (isTop && f.loops) f.loops.forEach(l => {
+        if (l.kind === 'for') l.vars.forEach(vn => { const vv = f.vars.find(x => x.name === vn); if (vv && vv.s && /^-?\d+$/.test(vv.s)) pointers.push({ name: vn, index: +vv.s }); });
+      });
+      f.vars.forEach(v => {
+        if (v.type === 'string[]' && v.name === 'args') return;
+        if (v.arr !== undefined) {
+          const a = s.arrays[v.arr];
+          const ptrs = [...pointers];
+          if (isTop && f.loops) f.loops.forEach(l => { if (l.kind === 'foreach' && l.arr === v.arr) ptrs.push({ name: '◆', index: l.idx }); });
+          arrs.append(arrayView(v.name, a.values, { type: v.type, changed: changedCells.get(v.arr), isNew: newArrs.has(v.arr), pointers: isTop ? ptrs : [] }));
+        } else {
+          scalars.append(varBox(v.name, v.s, { changed: changedVars.has(fi + ':' + v.name), unassigned: v.unassigned, type: v.type }));
+        }
+      });
+      // מערך שנוצר זה עתה אבל עוד לא נשמר במשתנה
+      if (isTop) newArrs.forEach(id => {
+        if (!f.vars.some(v => v.arr === id) && s.arrays[id]) arrs.append(arrayView('(מערך חדש)', s.arrays[id].values, { type: s.arrays[id].elem + '[]', isNew: true }));
+      });
+      const body = [];
+      if (scalars.childNodes.length) body.push(scalars);
+      if (arrs.childNodes.length) body.push(arrs);
+      if (!body.length) body.push(h('p', { class: 'frame-empty', text: 'עוד אין משתנים' }));
+      stage.append(h('div', { class: 'frame' + (isTop ? ' top' : ' below') }, head, ...body));
+    }
+  }
+
+  // ---------- הרצה ובדיקה ----------
+  function sameJS(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  const jsShow = x => Array.isArray(x) ? '{' + x.map(y => typeof y === 'string' ? `'${y}'` : y).join(', ') + '}' : typeof x === 'string' ? `'${x}'` : String(x);
+  function sigText(sig, name) { return `${sig.returns} ${name || '...'}(${sig.params.join(', ')})`; }
+
+  function runTests(q, prog, mainRes) {
+    const results = [];
+    const sig = q.signature;
+    const all = [];
+    prog.classes.forEach(c => c.methods.forEach(m => { if (m.name !== 'Main') all.push(m); }));
+    const match = all.find(m => m.ret === CSharp.normType(sig.returns) && m.params.length === sig.params.length && m.params.every((p, i) => p.type === CSharp.normType(sig.params[i])));
+    if (!match) {
+      let msg = `לא מצאתי פעולה שמקבלת (${sig.params.join(', ') || 'כלום'}) ומחזירה ${sig.returns}.`;
+      if (all.length) msg += ' בקוד יש: ' + all.map(m => `${m.ret} ${m.name}(${m.params.map(p => p.type).join(', ')})`).join(' ; ');
+      else msg += ' עדיין לא כתבתם פעולה מחוץ ל-Main.';
+      results.push({ ok: false, text: 'הכותרת של הפעולה', detail: msg });
+      return { results, method: null };
+    }
+    results.push({ ok: true, text: `הכותרת של הפעולה נכונה: ${match.ret} ${match.name}(${match.params.map(p => p.type + ' ' + p.name).join(', ')})` });
+    if (!match.isStatic) results.push({ ok: false, text: 'הפעולה צריכה להיות static', detail: `כתבו: public static ${match.ret} ${match.name}(...)` });
+    const callers = mainRes.calledFrom.get(match.name);
+    if (callers && callers.has('Main')) results.push({ ok: true, text: `התוכנית הראשית קוראת לפעולה ${match.name}` });
+    else if (!mainRes.error) results.push({ ok: false, text: `התוכנית הראשית לא קוראת לפעולה ${match.name}`, detail: `בתוך Main כתבו קריאה לפעולה, למשל: ${callExample(q, match)}` });
+
+    const call = (...args) => {
+      const it = CSharp.Interpreter(prog, { trace: false });
+      const vals = args.map((a, i) => CSharp.fromJS(a, match.params[i].type));
+      return CSharp.toJS(it.call(match, vals));
+    };
+    for (const t of q.tests) {
+      try {
+        if (t.run) {
+          const e = t.run(call);
+          results.push(e ? { ok: false, text: t.name, detail: e } : { ok: true, text: t.name });
+        } else {
+          const got = call(...t.args);
+          const label = `${match.name}(${t.args.map(jsShow).join(', ')})`;
+          if (sameJS(got, t.expect)) results.push({ ok: true, text: `${label} מחזירה ${jsShow(t.expect)}` });
+          else results.push({ ok: false, text: `${label} צריכה להחזיר ${jsShow(t.expect)}`, detail: `אבל החזירה ${got === null ? 'null' : jsShow(got)}` });
+        }
+      } catch (e) {
+        if (e instanceof CSharp.CSError) results.push({ ok: false, text: t.name || `בדיקה עם ${(t.args || []).map(jsShow).join(', ')}`, detail: `שגיאה בשורה ${e.line}: ${e.message}`, line: e.line });
+        else throw e;
+      }
+    }
+    return { results, method: match };
+  }
+  function callExample(q, m) {
+    const sample = { 'int': '10', 'char': "'#'", 'int[]': 'arr' };
+    const ret = m.ret === 'void' ? '' : `${m.ret} result = `;
+    return `${ret}${m.name}(${m.params.map(p => sample[p.type] || p.name).join(', ')});`;
+  }
+
+  function runCode() {
+    const q = Q();
+    if (!unlocked(q)) return;
+    qs(q.id).code = getCode(); persist();
+    clearMarks();
+    if (player) { player.stop(); player = null; }
+    const box = $('#results'); box.hidden = false; box.innerHTML = '';
+    const src = getCode();
+    let prog;
+    try { prog = CSharp.parse(src); }
+    catch (e) {
+      if (!(e instanceof CSharp.CSError)) throw e;
+      markLine(e.line, 'err-line');
+      box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'שגיאת קומפילציה' }), h('span', { text: ` בשורה ${e.line}` })), h('p', { class: 'res-err', text: e.message }));
+      const rv = $('#run-view');
+      if (rv) { rv.innerHTML = ''; rv.append(h('h3', { class: 'sim-h', text: 'הריצה של הקוד שלכם' }), h('p', { class: 'run-placeholder', text: 'הקוד לא עבר קומפילציה, ולכן אין מה להציג. תקנו את השגיאה שמתחת לעורך ונסו שוב.' })); }
+      return;
+    }
+    const it = CSharp.Interpreter(prog, { trace: true, readLine: () => window.prompt('Console.ReadLine() — הקלידו קלט:') || '' });
+    let mainRes;
+    try { mainRes = it.runMain(); }
+    catch (e) {
+      if (!(e instanceof CSharp.CSError)) throw e;
+      markLine(e.line, 'err-line');
+      box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'שגיאה' })), h('p', { class: 'res-err', text: e.message }));
+      return;
+    }
+    const { results } = runTests(q, prog, mainRes);
+    if (mainRes.error) results.forEach(r => { if (r.detail && r.detail.endsWith(mainRes.error.message)) r.detail = 'נכשלה בגלל אותה שגיאה שמופיעה למעלה'; });
+    const tips = [];
+    if (/System\.(Int32|Double|String|Boolean)\[\]/.test(mainRes.out))
+      tips.push('הדפסתם מערך ישירות, ולכן הופיע System.Int32[] ולא הערכים. כדי לראות את הערכים: Console.WriteLine(string.Join(", ", arr)); או לולאה שמדפיסה כל תא.');
+    if (!mainRes.out.trim() && !mainRes.error) tips.push('התוכנית לא הדפיסה כלום. הדפיסו את התוצאה כדי לראות אותה בפלט.');
+
+    const allOk = !mainRes.error && results.every(r => r.ok);
+    if (mainRes.error) {
+      box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'שגיאה בזמן ריצה' }), h('span', { text: ` בשורה ${mainRes.error.line}` })), h('p', { class: 'res-err', text: mainRes.error.message }));
+    } else if (allOk) {
+      box.append(h('div', { class: 'res-head good' }, h('strong', { text: 'כל הכבוד! הפעולה עובדת' })));
+    } else {
+      box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'הקוד רץ, אבל יש מה לתקן' })));
+    }
+    const ul = h('ul', { class: 'res-list' });
+    results.forEach(r => ul.append(h('li', { class: r.ok ? 'ok' : 'no' },
+      h('span', { class: 'res-ico', 'aria-hidden': 'true', text: r.ok ? '✓' : '✗' }),
+      h('div', null, h('div', { class: 'res-t', dir: 'auto', text: r.text }), r.detail ? h('div', { class: 'res-d', dir: 'auto', text: r.detail }) : null))));
+    box.append(ul);
+    tips.forEach(t => box.append(h('p', { class: 'res-tip', text: t })));
+
+    const st = qs(q.id);
+    if (allOk) {
+      st.done = true; persist(); renderTabs();
+      const idx = QUESTIONS.findIndex(x => x.id === q.id);
+      const nextQ = QUESTIONS.slice(idx + 1).find(x => !qs(x.id).done) || QUESTIONS.find(x => !qs(x.id).done);
+      if (nextQ) box.append(h('button', { class: 'btn btn-next', type: 'button', onclick: () => go(nextQ.id) }, `לשאלה ${nextQ.id}`));
+      else box.append(h('p', { class: 'res-tip', text: 'סיימתם את כל השאלות!' }));
+    }
+    if (!$('#run-view')) renderSim();
+    if (mainRes.steps.length) player = Player(mainRes.steps, mainRes);
+    if (window.innerWidth < 900) setTimeout(() => box.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' }), 50);
+  }
+
+  function resetCode() {
+    if (!confirm('למחוק את הקוד שכתבתם בשאלה הזו ולהתחיל מחדש?')) return;
+    const q = Q(); qs(q.id).code = null; persist();
+    setCode(q.starter); clearMarks();
+    $('#results').hidden = true;
+    renderSim();
+  }
+
+  function renderAll() {
+    renderTabs();
+    renderQuestion();
+    renderCodeArea(false);
+    renderSim();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initEditor();
+    $('#run').addEventListener('click', runCode);
+    $('#reset').addEventListener('click', resetCode);
+    renderAll();
+  });
+})();
+
+</script>
+</body>
+</html>

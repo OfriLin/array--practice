@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>מערכים ב-C# — תרגול עם הדמיה</title>
+<title>משחק מערכים</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect x='4' y='20' width='18' height='24' fill='%23fff' stroke='%231B2A4A' stroke-width='4'/><rect x='23' y='20' width='18' height='24' fill='%23FFD84D' stroke='%231B2A4A' stroke-width='4'/><rect x='42' y='20' width='18' height='24' fill='%23fff' stroke='%231B2A4A' stroke-width='4'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -144,7 +144,7 @@ code, .mono { font-family: var(--mono); }
 .cm-s-lab .err-line { background: rgba(201, 58, 54, .32); box-shadow: inset 4px 0 0 #FF6B66; }
 
 /* ---------- תוצאות ---------- */
-.results { margin-top: 18px; border: 1.5px solid var(--line); border-radius: 8px; padding: 14px 18px; background: var(--white); }
+.results { margin-top: 18px; border: 2px solid var(--ink); border-radius: 8px; padding: 14px 18px; background: var(--white); }
 .res-head { font-size: 17px; margin-bottom: 6px; }
 .res-head.good { color: var(--ok); }
 .res-head.bad { color: var(--bad); }
@@ -217,7 +217,7 @@ code, .mono { font-family: var(--mono); }
 .cell.empty { width: auto; padding: 10px 14px; border: 2px dashed var(--ink-3); color: var(--ink-3); font-size: 14px; }
 
 /* נגן */
-.controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .pbtns { display: flex; gap: 4px; }
 .pbtn { width: 38px; height: 34px; border: 1.5px solid var(--ink); background: var(--white); border-radius: 6px; cursor: pointer; font-size: 13px; padding: 0; display: grid; place-items: center; }
 .pbtn:hover { background: var(--paper); }
@@ -239,7 +239,8 @@ code, .mono { font-family: var(--mono); }
 .frame.top { border-color: var(--ink); border-width: 2px; }
 .frame.below { opacity: .72; }
 .frame-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-.frame-where { font-size: 13px; color: var(--ink-3); }
+.frame-where { font-size: 17px; font-weight: 700; color: var(--ink); }
+.frame.below .frame-where { font-size: 16px; }
 .frame-label { font-weight: 600; font-size: 14.5px; }
 .loop-badge { margin-inline-start: auto; display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 600; color: var(--pen); background: #EAF0FD; border-radius: 999px; padding: 2px 12px; }
 .loop-ico { display: inline-block; font-size: 15px; }
@@ -250,10 +251,54 @@ code, .mono { font-family: var(--mono); }
 .frame-empty { color: var(--ink-3); font-size: 14px; margin: 0; }
 
 .console-wrap { margin-top: 14px; }
-.console-title { font-size: 13px; font-weight: 600; color: var(--ink-3); margin-bottom: 4px; }
+.console-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
 .console { background: var(--code-bg); color: #E6EAF2; font-family: var(--mono); font-size: 14.5px; border-radius: 6px; padding: 10px 12px; margin: 0; min-height: 60px; max-height: 180px; overflow: auto; white-space: pre-wrap; text-align: left; }
 .con-err { color: #FF8A85; }
 .note-small { font-size: 13px; color: var(--ink-3); }
+
+/* ---------- משחק ---------- */
+.try-first { background: var(--marker-soft); border-radius: 8px; padding: 10px 14px; margin: 0 0 16px; max-width: 62ch; }
+.f-item.off { opacity: .45; }
+.f-row input.free { font-family: var(--sans); text-align: start; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn-primary { background: var(--ink); color: var(--white); }
+.btn-primary:hover:not(:disabled) { background: #2C3E66; }
+.tab { padding: 5px 10px; gap: 6px; }
+.tab-check { color: var(--ok); font-weight: 700; font-size: 14px; }
+.tab.done .tab-n { background: var(--ok); color: var(--white); }
+
+.game { background: var(--white); border: 2px solid var(--ink); border-radius: 10px; padding: 16px 18px 18px; margin-bottom: 18px; box-shadow: 4px 4px 0 var(--ink); }
+.g-block { display: flex; flex-direction: column; gap: 8px; }
+.g-items { display: flex; gap: 22px; align-items: flex-end; flex-wrap: wrap; padding-top: 4px; }
+.g-machine { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 16px 0; padding: 14px 0; border-top: 1.5px dashed var(--line); border-bottom: 1.5px dashed var(--line); }
+.g-err { color: var(--bad); font-size: 14.5px; }
+.g-err:empty { display: none; }
+.g-out-area { min-height: 84px; }
+.var-edit .var-val { display: flex; align-items: center; padding: 0 8px; background: var(--white); border-width: 2px; }
+.var-edit .var-val:focus-within { box-shadow: 0 0 0 3px rgba(45, 85, 200, .25); background: var(--marker-soft); }
+.var-in { width: 3.2em; border: 0; background: transparent; font-family: var(--mono); font-size: 18px; font-weight: 600; text-align: center; padding: 3px 0; outline: none; }
+.var-val .q { font-family: var(--mono); font-weight: 600; color: var(--ink-2); }
+.var-val .q + .var-in { width: 1.1em; }
+.var-edit .var-val:has(.q) { padding: 0 10px; }
+.cell-in { font: inherit; font-family: var(--mono); text-align: center; padding: 0; outline: none; color: var(--ink); }
+.cell-in:focus { background: var(--marker-soft); }
+.arr-edit .cells-scroll { padding-top: 4px; margin-top: 0; }
+.arr-type.strong { font-size: 14px; font-weight: 600; color: var(--ink); }
+.arr-tools { display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px; }
+.mini { border: 1.5px solid var(--line); background: var(--white); border-radius: 6px; padding: 2px 10px; cursor: pointer; font-size: 13.5px; }
+.mini:hover:not(:disabled) { border-color: var(--ink-2); }
+.mini:disabled { opacity: .4; cursor: default; }
+.var.born-var .var-val { animation: flash .6s ease-out; }
+.g-hist-wrap { margin-top: 16px; }
+.g-hist { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-family: var(--mono); font-size: 14px; text-align: left; }
+.g-hist li { display: flex; gap: 10px; align-items: baseline; padding: 3px 8px; border-radius: 4px; background: var(--paper); flex-wrap: wrap; }
+.g-hist li:first-child { background: var(--marker-soft); }
+.h-ar { color: var(--ink-3); }
+.h-out { font-weight: 600; }
+
+.arrays .arr + .arr { margin-top: 6px; }
+.arrays .cells-scroll { padding-top: 24px; margin-top: -6px; }
+.tab.done .tab-n { font-size: 12px; }
 
 /* ---------- מסכים צרים ---------- */
 @media (max-width: 980px) {
@@ -267,7 +312,7 @@ code, .mono { font-family: var(--mono); }
   .tab-t { display: none; }
   .progress { font-size: 13px; }
   .sim-title { font-size: 34px; }
-  .expected, .run-view { box-shadow: 3px 3px 0 var(--ink); padding: 14px 12px; }
+  .game, .expected, .run-view { box-shadow: 3px 3px 0 var(--ink); padding: 14px 12px; }
   :root { --cell: 40px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -277,7 +322,7 @@ code, .mono { font-family: var(--mono); }
 </head>
 <body>
 <header class="topbar">
-  <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>מערכים ב-C#</div>
+  <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>משחק מערכים</div>
   <nav class="tabs" id="tabs" aria-label="שאלות"></nav>
   <div class="progress" id="progress"></div>
 </header>
@@ -285,11 +330,13 @@ code, .mono { font-family: var(--mono); }
 <main class="layout">
   <!-- צד ימין: השאלה -->
   <section class="pane-q" aria-labelledby="q-title">
-    <p class="q-num" id="q-num"></p>
     <h2 class="q-title" id="q-title"></h2>
-    <div class="q-task" id="q-task"></div>
+    <div class="q-task">
+      <p>בחלון ההדמיה מחכה לכם פעולה סודית. הכניסו לה ערכים, הפעילו אותה, וגלו מה היא עושה לפי מה שהיא מחזירה.</p>
+    </div>
 
-    <h3 class="section-h">לפני שכותבים קוד</h3>
+    <h3 class="section-h">מה גיליתם?</h3>
+    <p class="try-first" id="try-first">קודם נסו את הפעולה בחלון ההדמיה: הכניסו ערכים ולחצו על "הפעילו את הפעולה". אחרי הניסיון הראשון השאלות ייפתחו.</p>
     <div class="followups" id="followups"></div>
 
     <div class="code-section" id="code-section">
@@ -298,14 +345,12 @@ code, .mono { font-family: var(--mono); }
         <span>ענו נכון על כל השאלות שלמעלה, ואז ייפתח עורך הקוד.</span>
       </div>
       <div id="code-body" hidden>
-        <p class="code-task">כתבו את הפעולה כולל הקריאה מהתוכנית הראשית, והריצו אותה.</p>
+        <p class="code-task">כתבו את הפעולה כולל הקריאה מהתוכנית הראשית, ולחצו על "בדיקה".</p>
         <div class="editor" id="editor"></div>
         <div class="code-actions">
-          <button class="btn btn-run" id="run" type="button"><span aria-hidden="true">▶</span> הרצה</button>
-          <button class="btn btn-ghost" id="reset" type="button">התחלה מחדש</button>
-          <span class="kbd-hint" dir="ltr">Ctrl + Enter</span>
+          <button class="btn btn-run" id="run" type="button">בדיקה</button>
+          <button class="btn btn-ghost" id="reset" type="button">איפוס הקוד</button>
         </div>
-        <div class="results" id="results" hidden aria-live="polite"></div>
       </div>
     </div>
   </section>
@@ -975,8 +1020,11 @@ const CSharp = (() => {
       if (arrV.t !== 'array' && arrV.t !== 'string') err(`${exprName(e.obj)} אינו מערך, אי אפשר לגשת אליו עם [ ]`, e.line);
       const iv = coerce(idxV, 'int', e.line, 'אינדקס במערך');
       const len = arrV.t === 'array' ? arrV.v.length : arrV.v.length;
-      if (iv.v < 0 || iv.v >= len)
-        err(`חריגה מגבולות המערך (IndexOutOfRangeException): ניסיתם לגשת לתא ${exprName(e.obj)}[${iv.v}], אבל ${len === 0 ? 'המערך ריק' : `האינדקסים במערך הם רק 0 עד ${len - 1}`}`, e.line);
+      if (iv.v < 0 || iv.v >= len) {
+        const x = new CSError(`חריגה מגבולות המערך (IndexOutOfRangeException): ניסיתם לגשת לתא ${exprName(e.obj)}[${iv.v}], אבל ${len === 0 ? 'המערך ריק' : `האינדקסים במערך הם רק 0 עד ${len - 1}`}`, e.line);
+        if (arrV.t === 'array') x.oob = { arr: arrV.id, index: iv.v, name: exprName(e.idx) };
+        throw x;
+      }
       return iv.v;
     }
     function getL(t) { return evalE(t); }
@@ -1422,8 +1470,7 @@ const CSharp = (() => {
         let error = null;
         try { invoke(m, m.params.length ? [makeArray('string', [])] : [], null); }
         catch (x) { if (x instanceof CSError) error = x; else if (x instanceof RangeError) error = new CSError('יותר מדי קריאות מקוננות (StackOverflow)', 0); else throw x; }
-        if (!error) step(0, 'התוכנית הסתיימה', { kind: 'end' });
-        else if (trace) { steps.push({ ...(steps[steps.length - 1] || { frames: [], arrays: {}, changes: [] }), line: error.line, desc: 'שגיאה: ' + error.message, kind: 'error', out, changes: [] }); }
+        if (error && trace) { steps.push({ ...(steps[steps.length - 1] || { frames: [], arrays: {}, changes: [] }), line: error.line, desc: 'שגיאה: ' + error.message, kind: 'error', out, changes: [], oob: error.oob || null }); }
         return { steps, out, error, truncated, calledFrom };
       },
       call(m, vals) {
@@ -1470,132 +1517,119 @@ if (typeof module !== 'undefined') module.exports = CSharp;
    השאלות — כדי להוסיף שאלה, העתיקו אובייקט שלם והוסיפו אותו לסוף הרשימה.
 
    מבנה שאלה:
-   id        — מספר השאלה
-   title     — כותרת קצרה (מופיעה בלשונית)
-   task      — נוסח המשימה (אפשר כמה פסקאות, כמערך של מחרוזות)
-   followups — שאלות ההמשך. לכל אחת:
+   id        — מספר השאלה (זה גם השם שלה בלשונית)
+   game      — "הפעולה הסודית" שהתלמידים מנסים בחלון ההדמיה:
+                 params:  הפרמטרים שהתלמיד מכניס. לכל אחד:
+                            label  — מה כתוב על התיבה (למשל 'int' או 'int min')
+                            type   — 'int' | 'char' | 'int[]'
+                            value  — ערך התחלתי (במערך: רשימת מספרים)
+                            min/max — טווח מותר למספר (לא חובה)
+                            maxLen — מספר תאים מקסימלי במערך (לא חובה)
+                 returns: הטיפוס שהפעולה מחזירה — 'int' | 'char' | 'int[]' | 'char[]'
+                 validate:(לא חובה) פונקציה שמקבלת את הערכים ומחזירה הודעת שגיאה או null
+                 fn:      הפעולה עצמה, ב-JavaScript. מקבלת את הערכים ומחזירה תוצאה
+                          (char נכתב כמחרוזת של תו אחד)
+   followups — שאלות ההכנה. לכל אחת:
                  q:       נוסח השאלה
-                 accept:  רשימת תשובות נכונות (משווים בלי רווחים, בלי הבדלי אותיות גדולות/קטנות,
-                          וכל סוגי הגרשיים נחשבים זהים)
+                 accept:  רשימת תשובות נכונות (משווים בלי רווחים ובלי הבדל בין אותיות גדולות/קטנות)
                  pattern: לחלופין — ביטוי רגולרי שהתשובה המנורמלת צריכה להתאים לו
-                 array:   לחלופין — מערך תשובה. התלמיד יכול לכתוב עם או בלי { }
-                 check:   לחלופין — פונקציה (raw, norm) => true/false
+                 free:    true — כל תשובה מתקבלת (בלי בדיקה)
                  hint:    רמז שמופיע אחרי תשובה שגויה
-                 ok:      (לא חובה) הודעה שמופיעה אחרי תשובה נכונה
-   demo      — ההדמיה של "מה צריך לקרות":
-                 inputs: [{ name, value }] או [{ name, array: [...] }]
-                 output: { array: [...] } או { name, value }
-                 note:   הערה קטנה מתחת להדמיה (לא חובה)
-                 shuffle:[min,max] — אנימציית הגרלה בתאי הפלט (לא חובה)
+                 ok:      הודעה שמופיעה אחרי תשובה נכונה (לא חובה)
    signature — איך הפעולה של התלמיד צריכה להיראות: { returns: 'int[]', params: ['int'] }
    tests     — בדיקות אוטומטיות שמריצות את הפעולה של התלמיד:
-                 { args: [...], expect: ... }  — השוואה רגילה (char נכתב כמחרוזת של תו אחד)
+                 { args: [...], expect: ... }  — השוואה רגילה
                  { name, run: call => null או הודעת שגיאה }  — בדיקה מותאמת אישית
    starter   — הקוד שמופיע בעורך בהתחלה
    ===================================================================== */
 
-const STARTER = (methodHint, mainHint) => `using System;
+const STARTER = `using System;
 
 class Program
 {
-    // ${methodHint}
+    // כתבו כאן את הפעולה
 
 
     static void Main(string[] args)
     {
-        // ${mainHint}
+        // קראו לפעולה והדפיסו את מה שהיא מחזירה
 
     }
 }
 `;
 
+const WHAT_IT_DOES = { q: 'מה הפעולה עושה?', free: true, ok: 'יאללה לעבודה!' };
+
 const QUESTIONS = [
   {
     id: 1,
-    title: 'יצירת מערך ריק',
-    task: [
-      'כתבו פעולה שמקבלת מספר ומחזירה מערך.',
-      'הפעולה תיצור מערך int ריק בגודל המספר שהתקבל ותחזיר את המערך.',
-    ],
-    followups: [
-      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?$/, hint: 'הפעולה מקבלת מספר שלם אחד. כתבו טיפוס ושם, למשל: int num' },
-      { q: 'מה הפעולה מחזירה?', accept: ['int[]'], hint: 'היא מחזירה מערך של מספרים שלמים — הטיפוס ואחריו סוגריים מרובעים.' },
-      { q: 'איך המערך צריך להיראות בסיום אם num הוא 10?', array: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0'], hint: 'במערך יש 10 תאים. איזה ערך מקבל כל תא כשיוצרים מערך int חדש?' },
-    ],
-    demo: {
-      inputs: [{ name: 'num', value: '10' }],
-      output: { array: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0'] },
-      note: 'כשיוצרים מערך int חדש, כל התאים מתחילים ב-0.',
+    game: {
+      params: [{ label: 'int', type: 'int', value: '5', min: 0, max: 20 }],
+      returns: 'int[]',
+      fn: n => Array(n).fill(0),
     },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?$/, hint: 'הסתכלו על התיבה שבה הכנסתם ערך בהדמיה — מה הטיפוס שלה?' },
+      { q: 'מה הפעולה מחזירה?', accept: ['int[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
     signature: { returns: 'int[]', params: ['int'] },
     tests: [
       { args: [10], expect: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
       { args: [3], expect: [0, 0, 0] },
       { args: [1], expect: [0] },
     ],
-    starter: STARTER('כתבו כאן את הפעולה', 'קראו לפעולה עם המספר 10 והדפיסו את המערך שחזר'),
+    starter: STARTER,
   },
   {
     id: 2,
-    title: 'מערך של תווים',
-    task: [
-      'כתבו פעולה שמקבלת מספר ותו ומחזירה מערך של תווים.',
-      'הפעולה תיצור מערך char ריק בגודל המספר שהתקבל ותשים בכל תא את התו שהתקבל.',
-    ],
-    followups: [
-      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?,char([a-z_]\w*)?$/, hint: 'שני פרמטרים, מופרדים בפסיק: קודם המספר ואחריו התו. למשל: int num, char c' },
-      { q: 'מה הפעולה מחזירה?', accept: ['char[]'], hint: 'מערך של תווים — הטיפוס של תו ואחריו סוגריים מרובעים.' },
-      { q: "איך המערך צריך להיראות בסיום אם num הוא 4 ו-c הוא '#'?", array: ["'#'", "'#'", "'#'", "'#'"], hint: "במערך 4 תאים, ובכל תא נמצא התו '#'. כתבו את האיברים בתוך { } מופרדים בפסיקים." },
-    ],
-    demo: {
-      inputs: [{ name: 'num', value: '4' }, { name: 'c', value: "'#'" }],
-      output: { array: ["'#'", "'#'", "'#'", "'#'"] },
-      note: 'לולאת for עוברת על כל התאים ושמה בכל אחד את התו c.',
+    game: {
+      params: [
+        { label: 'int', type: 'int', value: '4', min: 0, max: 20 },
+        { label: 'char', type: 'char', value: '#' },
+      ],
+      returns: 'char[]',
+      fn: (n, c) => Array(n).fill(c),
     },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?,char([a-z_]\w*)?$/, hint: 'הפעולה מקבלת שני ערכים. כתבו את שני הטיפוסים לפי הסדר, מופרדים בפסיק.' },
+      { q: 'מה הפעולה מחזירה?', accept: ['char[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
     signature: { returns: 'char[]', params: ['int', 'char'] },
     tests: [
       { args: [4, '#'], expect: ['#', '#', '#', '#'] },
       { args: [2, 'a'], expect: ['a', 'a'] },
       { args: [6, '*'], expect: ['*', '*', '*', '*', '*', '*'] },
     ],
-    starter: STARTER('כתבו כאן את הפעולה', "קראו לפעולה עם 4 ו-'#' והדפיסו את המערך שחזר"),
+    starter: STARTER,
   },
   {
     id: 3,
-    title: 'הגרלת מספרים',
-    task: [
-      'כתבו פעולה שלא מקבלת כלום ומחזירה מערך.',
-      'הפעולה תיצור מערך int ריק בגודל 5 ותגריל לתוכו מספרים אקראיים מ-1 עד 10.',
-    ],
-    followups: [
-      { q: 'מה הפעולה מקבלת?', accept: ['כלום', 'שוםדבר', 'אין', 'לאמקבלת', 'לאמקבלתכלום', 'כלוםלא', '()', 'nothing', 'none', '-'], hint: 'קראו שוב את המשפט הראשון של המשימה.' },
-      { q: 'מה הפעולה מחזירה?', accept: ['int[]'], hint: 'מערך של מספרים שלמים.' },
-      {
-        q: 'איך המערך צריך להיראות בסיום? (תנו דוגמה)',
-        check: (raw, norm) => {
-          const items = norm.replace(/^[{[]|[}\]]$/g, '').split(',');
-          return items.length === 5 && items.every(x => /^\d+$/.test(x) && +x >= 1 && +x <= 10);
-        },
-        hint: 'כתבו 5 מספרים בין 1 ל-10 בתוך { }, למשל {4,9,3,1,5}',
-        ok: 'נכון! בכל הרצה יוצאים מספרים אחרים — כל מערך של 5 מספרים בין 1 ל-10 מתאים.',
-      },
-    ],
-    demo: {
-      inputs: [],
-      output: { array: ['4', '9', '3', '1', '5'] },
-      shuffle: [1, 10],
-      note: 'המספרים אקראיים, ולכן בכל הרצה המערך ייראה אחרת. הגודל תמיד 5 והערכים תמיד בין 1 ל-10.',
+    game: {
+      params: [
+        { label: 'int min', type: 'int', value: '1', min: -99, max: 99 },
+        { label: 'int max', type: 'int', value: '6', min: -99, max: 99 },
+      ],
+      returns: 'int[]',
+      validate: (min, max) => min > max ? 'min צריך להיות קטן או שווה ל-max' : null,
+      fn: (min, max) => Array.from({ length: 10 }, () => min + Math.floor(Math.random() * (max - min + 1))),
     },
-    signature: { returns: 'int[]', params: [] },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?,int([a-z_]\w*)?$/, hint: 'הפעולה מקבלת שני מספרים שלמים. כתבו את שני הטיפוסים, מופרדים בפסיק.' },
+      { q: 'מה הפעולה מחזירה?', accept: ['int[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
+    signature: { returns: 'int[]', params: ['int', 'int'] },
     tests: [
       {
-        name: 'המערך בגודל 5 וכל המספרים בין 1 ל-10',
+        name: 'המערך באורך 10 וכל המספרים בין min ל-max',
         run: call => {
-          for (let k = 0; k < 40; k++) {
-            const a = call();
-            if (a.length !== 5) return `המערך שחזר בגודל ${a.length}, אבל הוא צריך להיות בגודל 5`;
-            const bad = a.find(x => x < 1 || x > 10);
-            if (bad !== undefined) return `במערך הופיע המספר ${bad}, אבל מותר רק מספרים בין 1 ל-10`;
+          for (const [lo, hi] of [[1, 6], [-5, 5], [10, 20]]) for (let k = 0; k < 30; k++) {
+            const a = call(lo, hi);
+            if (a.length !== 10) return `המערך שחזר באורך ${a.length}, אבל הוא צריך להיות באורך 10`;
+            const bad = a.find(x => x < lo || x > hi);
+            if (bad !== undefined) return `עם min = ${lo} ו-max = ${hi} הופיע במערך המספר ${bad}, שלא נמצא בטווח`;
           }
           return null;
         },
@@ -1604,49 +1638,45 @@ const QUESTIONS = [
         name: 'המספרים באמת אקראיים',
         run: call => {
           const seen = new Set();
-          for (let k = 0; k < 40; k++) call().forEach(x => seen.add(x));
-          if (seen.size <= 1) return 'כל התאים קיבלו את אותו מספר בכל ההרצות — האם הגרלתם מספר חדש לכל תא, בתוך הלולאה?';
-          return null;
+          for (let k = 0; k < 30; k++) call(1, 6).forEach(x => seen.add(x));
+          return seen.size <= 1 ? 'כל התאים קיבלו את אותו מספר — האם הגרלתם מספר חדש לכל תא, בתוך הלולאה?' : null;
         },
       },
       {
-        name: 'גם 1 וגם 10 יכולים לצאת',
+        name: 'גם min וגם max יכולים לצאת',
         run: call => {
           const seen = new Set();
-          for (let k = 0; k < 300; k++) call().forEach(x => seen.add(x));
-          if (!seen.has(10)) return 'המספר 10 אף פעם לא הוגרל. ב-rnd.Next(min, max) המספר max לא כלול — כדי לקבל 1 עד 10 כותבים rnd.Next(1, 11)';
-          if (!seen.has(1)) return 'המספר 1 אף פעם לא הוגרל. בדקו את המספר הראשון ב-Next.';
+          for (let k = 0; k < 100; k++) call(1, 6).forEach(x => seen.add(x));
+          if (!seen.has(6)) return 'עם max = 6 המספר 6 אף פעם לא הוגרל. ב-rnd.Next(a, b) המספר b לא כלול — כדי לכלול את max כותבים rnd.Next(min, max + 1)';
+          if (!seen.has(1)) return 'עם min = 1 המספר 1 אף פעם לא הוגרל. בדקו את המספר הראשון ב-Next.';
           return null;
         },
       },
+      { args: [5, 5], expect: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5] },
     ],
-    starter: STARTER('כתבו כאן את הפעולה. כדי להגריל: Random rnd = new Random();  ואז  rnd.Next(1, 11)', 'קראו לפעולה והדפיסו את המערך שחזר'),
+    starter: STARTER,
   },
   {
     id: 4,
-    title: 'סכום המערך',
-    task: [
-      'כתבו פעולה שמקבלת מערך של int ומחזירה מספר.',
-      'הפעולה תחזיר את הסכום הכולל של המספרים במערך.',
-    ],
-    followups: [
-      { q: 'מה הפעולה מקבלת?', pattern: /^int\[\]([a-z_]\w*)?$/, hint: 'היא מקבלת מערך של מספרים שלמים, למשל: int[] arr' },
-      { q: 'מה הפעולה מחזירה?', accept: ['int'], hint: 'הסכום הוא מספר שלם אחד.' },
-      { q: 'אם המערך שהתקבל הוא {4,9,3,1,5}, מה יהיה המספר?', accept: ['22'], hint: 'חברו את כל המספרים: 4 + 9 + 3 + 1 + 5' },
-    ],
-    demo: {
-      inputs: [{ name: 'arr', array: ['4', '9', '3', '1', '5'] }],
-      output: { name: 'הסכום', value: '22' },
-      note: '4 + 9 + 3 + 1 + 5 = 22. משתנה סכום מתחיל ב-0, ובכל סיבוב של הלולאה מוסיפים לו את התא הנוכחי.',
+    game: {
+      params: [{ label: 'int[]', type: 'int[]', value: ['3', '4', '7'], min: -99, max: 99, maxLen: 10 }],
+      returns: 'int',
+      fn: arr => arr.reduce((a, b) => a + b, 0),
     },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', pattern: /^int\[\]([a-z_]\w*)?$/, hint: 'הסתכלו על הטיפוס שכתוב ליד המערך שמילאתם.' },
+      { q: 'מה הפעולה מחזירה?', accept: ['int'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
     signature: { returns: 'int', params: ['int[]'] },
     tests: [
       { args: [[4, 9, 3, 1, 5]], expect: 22 },
+      { args: [[3, 4, 7]], expect: 14 },
       { args: [[10]], expect: 10 },
       { args: [[]], expect: 0 },
       { args: [[-3, 3, 7, 1]], expect: 8 },
     ],
-    starter: STARTER('כתבו כאן את הפעולה', 'צרו מערך {4, 9, 3, 1, 5}, שלחו אותו לפעולה והדפיסו את הסכום'),
+    starter: STARTER,
   },
 ];
 
@@ -1663,6 +1693,7 @@ const QUESTIONS = [
       if (v === null || v === undefined || v === false) continue;
       if (k === 'class') el.className = v;
       else if (k === 'text') el.textContent = v;
+      else if (k === 'value') el.value = v;
       else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
       else el.setAttribute(k, v === true ? '' : v);
     }
@@ -1670,12 +1701,13 @@ const QUESTIONS = [
     return el;
   };
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const smooth = () => (reduceMotion ? 'auto' : 'smooth');
 
   // ---------- שמירה בדפדפן ----------
-  const KEY = 'cs-arrays-lab-v1';
+  const KEY = 'cs-arrays-game-v2';
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
-  const qs = id => (saved[id] = saved[id] || { answers: {}, correct: {}, code: null, done: false });
+  const qs = id => (saved[id] = saved[id] || { answers: {}, correct: {}, code: null, done: false, tried: 0, history: [] });
   const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { /* לא קריטי */ } };
 
   let current = QUESTIONS[0].id;
@@ -1683,21 +1715,13 @@ const QUESTIONS = [
   const Q = () => QUESTIONS.find(q => q.id === current);
 
   // ---------- נרמול תשובות ----------
-  const norm = s => String(s || '')
-    .replace(/[׳’‘`´"״“”]/g, "'")
-    .replace(/\s+/g, '')
-    .toLowerCase();
-  const stripQ = s => s.replace(/^'(.*)'$/, '$1');
+  const norm = s => String(s || '').replace(/[׳’‘`´"״“”]/g, "'").replace(/\s+/g, '').toLowerCase();
   function isCorrect(f, raw) {
     const n = norm(raw);
     if (!n) return false;
+    if (f.free) return true;
     if (f.check) return !!f.check(raw, n);
     if (f.pattern) return f.pattern.test(n);
-    if (f.array) {
-      const inner = n.replace(/^[{[]/, '').replace(/[}\]]$/, '');
-      const items = inner === '' ? [] : inner.split(',');
-      return items.length === f.array.length && items.every((x, i) => stripQ(x) === stripQ(norm(f.array[i])));
-    }
     return (f.accept || []).some(a => norm(a) === n);
   }
 
@@ -1709,10 +1733,7 @@ const QUESTIONS = [
       cm = CodeMirror(host, {
         mode: 'text/x-csharp', theme: 'lab', lineNumbers: true, indentUnit: 4, tabSize: 4,
         indentWithTabs: false, matchBrackets: true, autoCloseBrackets: true, direction: 'ltr',
-        extraKeys: {
-          Tab: c => c.somethingSelected() ? c.indentSelection('add') : c.replaceSelection('    ', 'end'),
-          'Ctrl-Enter': () => runCode(), 'Cmd-Enter': () => runCode(),
-        },
+        extraKeys: { Tab: c => c.somethingSelected() ? c.indentSelection('add') : c.replaceSelection('    ', 'end') },
       });
       cm.on('change', () => { clearMarks(); saveCodeSoon(); });
     } else {
@@ -1720,7 +1741,6 @@ const QUESTIONS = [
       textarea.addEventListener('input', saveCodeSoon);
       textarea.addEventListener('keydown', e => {
         if (e.key === 'Tab') { e.preventDefault(); const s = textarea.selectionStart; textarea.setRangeText('    ', s, textarea.selectionEnd, 'end'); }
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runCode();
       });
       host.append(textarea);
     }
@@ -1738,8 +1758,7 @@ const QUESTIONS = [
   }
   function runLine(line) {
     if (!cm) return;
-    marked.filter(m => m[1] === 'run-line').forEach(([l, c]) => cm.removeLineClass(l, 'background', c));
-    marked = marked.filter(m => m[1] !== 'run-line');
+    clearMarks();
     if (line) { markLine(line, 'run-line'); cm.scrollIntoView({ line: line - 1, ch: 0 }, 60); }
   }
 
@@ -1751,53 +1770,54 @@ const QUESTIONS = [
       nav.append(h('button', {
         class: 'tab' + (q.id === current ? ' on' : '') + (st.done ? ' done' : ''),
         'aria-current': q.id === current ? 'page' : null,
-        title: q.title, onclick: () => go(q.id),
-      }, h('span', { class: 'tab-n', text: st.done ? '✓' : String(q.id) }), h('span', { class: 'tab-t', text: q.title })));
+        'aria-label': `שאלה ${q.id}${st.done ? ' (הושלמה)' : ''}`,
+        onclick: () => go(q.id),
+      }, h('span', { class: 'tab-n', text: st.done ? '✓' : String(q.id) })));
     });
     const done = QUESTIONS.filter(q => qs(q.id).done).length;
     $('#progress').textContent = `${done} מתוך ${QUESTIONS.length} שאלות הושלמו`;
   }
   function go(id) {
-    if (player) player.stop();
+    stopRun();
     qs(current).code = getCode(); persist();
     current = id;
     try { localStorage.setItem(KEY + ':current', String(id)); } catch (e) {}
     renderAll();
-    window.scrollTo({ top: 0 }); document.querySelectorAll('.pane-q, .pane-sim').forEach(p => p.scrollTop = 0);
+    window.scrollTo({ top: 0 });
+    document.querySelectorAll('.pane-q, .pane-sim').forEach(p => { p.scrollTop = 0; });
   }
 
-  // ---------- צד ימין: שאלה ----------
-  function unlocked(q) { return q.followups.every((_, i) => qs(q.id).correct[i]); }
+  // ---------- צד ימין ----------
+  const unlocked = q => q.followups.every((_, i) => qs(q.id).correct[i]);
 
   function renderQuestion() {
     const q = Q(), st = qs(q.id);
-    $('#q-num').textContent = `שאלה ${q.id}`;
-    $('#q-title').textContent = q.title;
-    const task = $('#q-task'); task.innerHTML = '';
-    q.task.forEach(p => task.append(h('p', { text: p })));
-
+    $('#q-title').textContent = `שאלה ${q.id}`;
     const list = $('#followups'); list.innerHTML = '';
+    const tried = st.tried > 0;
+    $('#try-first').hidden = tried;
     q.followups.forEach((f, i) => {
       const id = `f-${q.id}-${i}`;
-      const input = h('input', { id, type: 'text', dir: 'ltr', autocomplete: 'off', spellcheck: 'false', value: st.answers[i] || '' });
+      const input = h('input', { id, type: 'text', dir: f.free ? 'auto' : 'ltr', autocomplete: 'off', spellcheck: 'false', value: st.answers[i] || '', class: f.free ? 'free' : null });
+      const btn = h('button', { class: 'btn btn-check', type: 'button', onclick: () => check() }, f.free ? 'אישור' : 'בדיקה');
       const msg = h('div', { class: 'f-msg', role: 'status', 'aria-live': 'polite' });
-      const item = h('div', { class: 'f-item' + (st.correct[i] ? ' ok' : '') },
+      const item = h('div', { class: 'f-item' + (st.correct[i] ? ' ok' : '') + (tried ? '' : ' off') },
         h('label', { for: id, class: 'f-q', text: f.q }),
-        h('div', { class: 'f-row' }, input,
-          h('button', { class: 'btn btn-check', type: 'button', onclick: () => check() }, 'בדיקה')),
+        h('div', { class: 'f-row' }, input, btn),
         msg);
+      if (!tried) { input.disabled = true; btn.disabled = true; }
       if (st.correct[i]) { input.readOnly = true; msg.textContent = f.ok || 'נכון!'; msg.className = 'f-msg good'; }
       function check() {
-        if (st.correct[i]) return;
+        if (st.correct[i] || !tried) return;
         st.answers[i] = input.value; persist();
-        if (!input.value.trim()) { msg.textContent = 'כתבו תשובה בתיבה ואז לחצו על בדיקה.'; msg.className = 'f-msg'; return; }
+        if (!input.value.trim()) { msg.textContent = 'כתבו תשובה בתיבה ואז לחצו על ' + (f.free ? 'אישור.' : 'בדיקה.'); msg.className = 'f-msg'; return; }
         if (isCorrect(f, input.value)) {
           st.correct[i] = true; persist();
           item.classList.add('ok'); input.readOnly = true;
           msg.textContent = f.ok || 'נכון!'; msg.className = 'f-msg good';
           const nextInput = $(`#f-${q.id}-${i + 1}`);
           if (nextInput && !nextInput.readOnly) nextInput.focus();
-          if (unlocked(q)) { renderCodeArea(true); renderSim(); }
+          if (unlocked(q)) renderCodeArea(true);
         } else {
           msg.textContent = 'לא בדיוק. ' + (f.hint || 'נסו שוב.');
           msg.className = 'f-msg bad';
@@ -1814,7 +1834,6 @@ const QUESTIONS = [
     const q = Q(), st = qs(q.id);
     const open = unlocked(q);
     const sec = $('#code-section');
-    sec.classList.toggle('locked', !open);
     $('#code-lock').hidden = open;
     $('#code-body').hidden = !open;
     if (open) {
@@ -1823,16 +1842,14 @@ const QUESTIONS = [
       if (justUnlocked) {
         sec.classList.add('reveal');
         setTimeout(() => sec.classList.remove('reveal'), 900);
-        sec.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        sec.scrollIntoView({ behavior: smooth(), block: 'start' });
       }
     }
-    $('#results').innerHTML = '';
-    $('#results').hidden = true;
   }
 
   // ---------- רכיבי הדמיה ----------
   function varBox(name, value, opts = {}) {
-    return h('div', { class: 'var' + (opts.changed ? ' changed' : '') + (opts.unassigned ? ' unassigned' : '') + (opts.big ? ' big' : '') },
+    return h('div', { class: 'var' + (opts.changed ? ' changed' : '') + (opts.unassigned ? ' unassigned' : '') + (opts.big ? ' big' : '') + (opts.born ? ' born-var' : '') },
       h('div', { class: 'var-val', dir: 'ltr', text: value }),
       h('div', { class: 'var-stem', 'aria-hidden': 'true' }),
       h('div', { class: 'var-box' + (/[\u0590-\u05FF]/.test(name) ? ' he' : ''), dir: 'auto', text: name }),
@@ -1841,135 +1858,191 @@ const QUESTIONS = [
   const MAX_CELLS = 40;
   function arrayView(name, values, opts = {}) {
     const cells = h('div', { class: 'cells', dir: 'ltr' });
-    const shown = values.slice(0, MAX_CELLS);
-    shown.forEach((v, i) => {
+    values.slice(0, MAX_CELLS).forEach((v, i) => {
       const ptrs = (opts.pointers || []).filter(p => p.index === i).map(p => p.name);
-      const cell = h('div', {
+      cells.append(h('div', {
         class: 'cell' + (opts.changed && opts.changed.has(i) ? ' drop' : '') + (opts.isNew ? ' born' : '') + (ptrs.length ? ' here' : ''),
         style: opts.isNew && !reduceMotion ? `animation-delay:${Math.min(i, 20) * 35}ms` : null,
       },
         ptrs.length ? h('div', { class: 'ptr', text: ptrs.join(',') }) : null,
         h('div', { class: 'cell-v', text: v }),
-        h('div', { class: 'cell-i', text: String(i) }));
-      cells.append(cell);
+        h('div', { class: 'cell-i', text: String(i) })));
     });
-    const outPtr = (opts.pointers || []).find(p => p.index >= values.length && values.length <= MAX_CELLS);
-    if (outPtr) cells.append(h('div', { class: 'cell out' },
-      h('div', { class: 'ptr', text: outPtr.name }),
+    if (opts.oob) cells.append(h('div', { class: 'cell out' },
+      h('div', { class: 'ptr', text: opts.oob.name }),
       h('div', { class: 'cell-v', text: '✗' }),
-      h('div', { class: 'cell-i', text: String(outPtr.index) })));
+      h('div', { class: 'cell-i', text: String(opts.oob.index) })));
     if (values.length > MAX_CELLS) cells.append(h('div', { class: 'cell more', text: `…ועוד ${values.length - MAX_CELLS}` }));
-    if (!values.length) cells.append(h('div', { class: 'cell empty', text: 'מערך ריק' }));
+    if (!values.length && !opts.oob) cells.append(h('div', { class: 'cell empty', text: 'מערך ריק' }));
     return h('div', { class: 'arr' },
       name || opts.type ? h('div', { class: 'arr-head', dir: 'ltr' }, h('span', { class: 'arr-name', text: name }), opts.type ? h('span', { class: 'arr-type', text: opts.type }) : null) : null,
       h('div', { class: 'cells-scroll' }, cells));
   }
 
-  // ---------- צד שמאל: הדמיה ----------
-  let shuffleTimer = null;
+  // ---------- המשחק: הפעולה הסודית ----------
+  const gameInputs = {}; // ערכים שהתלמיד הקליד (לפי שאלה)
+  const fmtVal = (v, type) => {
+    if (type.endsWith('[]')) return '{' + v.map(x => fmtVal(x, type.slice(0, -2))).join(', ') + '}';
+    if (type === 'char') return `'${v}'`;
+    return String(v);
+  };
+
+  function renderGame() {
+    const q = Q(), g = q.game, st = qs(q.id);
+    if (!gameInputs[q.id]) gameInputs[q.id] = g.params.map(p => Array.isArray(p.value) ? [...p.value] : p.value);
+    const vals = gameInputs[q.id];
+
+    const inRow = h('div', { class: 'g-items' });
+    g.params.forEach((p, pi) => inRow.append(paramEditor(p, pi, vals)));
+
+    const err = h('div', { class: 'g-err', role: 'alert' });
+    const outArea = h('div', { class: 'g-items g-out-area' });
+    const showPlaceholder = () => {
+      outArea.innerHTML = '';
+      if (g.returns.endsWith('[]')) outArea.append(h('div', { class: 'arr' },
+        h('div', { class: 'arr-head', dir: 'ltr' }, h('span', { class: 'arr-type', text: g.returns })),
+        h('div', { class: 'cells-scroll' }, h('div', { class: 'cells', dir: 'ltr' }, ...[0, 1, 2].map(() => h('div', { class: 'cell ghost' }, h('div', { class: 'cell-v', text: '?' })))))));
+      else outArea.append(varBox(g.returns, '?', { unassigned: true }));
+    };
+    showPlaceholder();
+
+    const hist = h('ol', { class: 'g-hist', dir: 'ltr', reversed: true });
+    const renderHist = () => {
+      hist.innerHTML = '';
+      st.history.forEach(r => hist.append(h('li', null, h('span', { class: 'h-in', text: r.i }), h('span', { class: 'h-ar', 'aria-hidden': 'true', text: '→' }), h('span', { class: 'h-out', text: r.o }))));
+      histWrap.hidden = !st.history.length;
+    };
+    const histWrap = h('div', { class: 'g-hist-wrap' }, h('div', { class: 'io-label', text: 'ניסיונות קודמים' }), hist);
+
+    function runGame() {
+      err.textContent = '';
+      const args = [];
+      for (let pi = 0; pi < g.params.length; pi++) {
+        const p = g.params[pi], v = vals[pi];
+        const label = g.params.length > 1 ? `בתיבה ${p.label}: ` : '';
+        if (p.type === 'int') {
+          const t = String(v).trim();
+          if (!/^-?\d+$/.test(t)) { err.textContent = label + 'צריך לכתוב מספר שלם'; return; }
+          const n = parseInt(t, 10);
+          if (p.min !== undefined && (n < p.min || n > p.max)) { err.textContent = label + `בחרו מספר בין ${p.min} ל-${p.max}`; return; }
+          args.push(n);
+        } else if (p.type === 'char') {
+          if ([...String(v)].length !== 1) { err.textContent = label + 'צריך לכתוב תו אחד בדיוק'; return; }
+          args.push(String(v));
+        } else if (p.type === 'int[]') {
+          const arr = [];
+          for (let k = 0; k < v.length; k++) {
+            const t = String(v[k]).trim();
+            if (!/^-?\d+$/.test(t)) { err.textContent = `בתא ${k} צריך לכתוב מספר שלם`; return; }
+            const n = parseInt(t, 10);
+            if (p.min !== undefined && (n < p.min || n > p.max)) { err.textContent = `בתא ${k}: בחרו מספר בין ${p.min} ל-${p.max}`; return; }
+            arr.push(n);
+          }
+          args.push(arr);
+        }
+      }
+      const vErr = g.validate && g.validate(...args);
+      if (vErr) { err.textContent = vErr; return; }
+      const res = g.fn(...args);
+      outArea.innerHTML = '';
+      if (g.returns.endsWith('[]')) outArea.append(arrayView('', res.map(x => fmtVal(x, g.returns.slice(0, -2))), { type: g.returns, isNew: true }));
+      else outArea.append(varBox(g.returns, fmtVal(res, g.returns), { big: true, born: true }));
+      const firstTry = !st.tried;
+      st.tried++;
+      st.history.unshift({ i: '(' + args.map((a, k) => fmtVal(a, g.params[k].type)).join(', ') + ')', o: fmtVal(res, g.returns) });
+      st.history = st.history.slice(0, 8);
+      persist(); renderHist();
+      if (firstTry) renderQuestion();
+    }
+
+    const card = h('section', { class: 'game', 'aria-label': 'נסו את הפעולה' },
+      h('h3', { class: 'sim-h', text: 'נסו את הפעולה' }),
+      h('div', { class: 'g-block' }, h('div', { class: 'io-label', text: 'הפעולה מקבלת:' }), inRow),
+      h('div', { class: 'g-machine' },
+        h('button', { class: 'btn btn-run', type: 'button', onclick: runGame }, 'הפעילו את הפעולה'),
+        err),
+      h('div', { class: 'g-block' }, h('div', { class: 'io-label', text: 'הפעולה מחזירה:' }), outArea),
+      histWrap);
+    renderHist();
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input')) runGame(); });
+    return card;
+  }
+
+  function paramEditor(p, pi, vals) {
+    if (p.type === 'int[]') {
+      const wrap = h('div', { class: 'arr arr-edit' });
+      const draw = () => {
+        wrap.innerHTML = '';
+        const cells = h('div', { class: 'cells', dir: 'ltr' });
+        vals[pi].forEach((v, k) => {
+          const inp = h('input', { class: 'cell-v cell-in', type: 'text', inputmode: 'numeric', value: v, 'aria-label': `תא ${k}`, maxlength: '4' });
+          inp.addEventListener('input', () => { vals[pi][k] = inp.value; });
+          cells.append(h('div', { class: 'cell' }, inp, h('div', { class: 'cell-i', text: String(k) })));
+        });
+        const canAdd = vals[pi].length < (p.maxLen || 10);
+        const tools = h('div', { class: 'arr-tools' },
+          h('button', { class: 'mini', type: 'button', disabled: !canAdd, 'aria-label': 'הוספת תא', onclick: () => { vals[pi].push('0'); draw(); const all = wrap.querySelectorAll('.cell-in'); all[all.length - 1].select(); } }, '+ תא'),
+          h('button', { class: 'mini', type: 'button', disabled: !vals[pi].length, 'aria-label': 'מחיקת התא האחרון', onclick: () => { vals[pi].pop(); draw(); } }, '− תא'));
+        wrap.append(
+          h('div', { class: 'arr-head', dir: 'ltr' }, h('span', { class: 'arr-type strong', text: p.label })),
+          h('div', { class: 'cells-scroll' }, cells),
+          tools);
+      };
+      draw();
+      return wrap;
+    }
+    const isChar = p.type === 'char';
+    const inp = h('input', { class: 'var-in', type: 'text', dir: 'ltr', value: vals[pi], inputmode: isChar ? null : 'numeric', maxlength: isChar ? '1' : '4', 'aria-label': `ערך עבור ${p.label}` });
+    inp.addEventListener('input', () => { vals[pi] = inp.value; });
+    inp.addEventListener('focus', () => inp.select());
+    return h('div', { class: 'var var-edit' },
+      h('div', { class: 'var-val', dir: 'ltr' }, isChar ? h('span', { class: 'q', text: "'" }) : null, inp, isChar ? h('span', { class: 'q', text: "'" }) : null),
+      h('div', { class: 'var-stem', 'aria-hidden': 'true' }),
+      h('div', { class: 'var-box', dir: 'ltr', text: p.label }));
+  }
+
+  // ---------- צד שמאל ----------
   function renderSim() {
-    const q = Q();
     const root = $('#sim-body'); root.innerHTML = '';
-    clearInterval(shuffleTimer);
-    if (!unlocked(q)) {
-      root.append(h('div', { class: 'sim-empty' },
-        h('div', { class: 'empty-cells', 'aria-hidden': 'true' }, ...[0, 1, 2, 3, 4].map(() => h('div', { class: 'cell ghost' }, h('div', { class: 'cell-v', text: '?' })))),
-        h('p', { text: 'ענו נכון על שאלות ההכנה, וכאן תופיע הדמיה של מה שהפעולה צריכה לעשות.' })));
-      return;
-    }
-    root.append(expectedView(q));
-    root.append(h('section', { id: 'run-view', class: 'run-view', 'aria-label': 'הריצה של הקוד שלכם' },
-      h('h3', { class: 'sim-h', text: 'הריצה של הקוד שלכם' }),
-      h('p', { class: 'run-placeholder', text: 'כתבו את הקוד ולחצו על "הרצה". כאן תראו צעד אחרי צעד איך המשתנים והמערך מתמלאים.' })));
+    root.append(renderGame());
+    root.append(h('div', { id: 'run-slot' }));
   }
 
-  function expectedView(q) {
-    const d = q.demo;
-    const inputs = h('div', { class: 'io-side' }, h('div', { class: 'io-label', text: 'קלט' }));
-    const row = h('div', { class: 'io-items' });
-    if (!d.inputs.length) row.append(h('div', { class: 'io-none', text: 'הפעולה לא מקבלת כלום' }));
-    d.inputs.forEach(inp => row.append(inp.array ? arrayView(inp.name, inp.array) : varBox(inp.name, inp.value)));
-    inputs.append(row);
-
-    const output = h('div', { class: 'io-side' }, h('div', { class: 'io-label', text: 'פלט' }));
-    let outEl;
-    if (d.output.array) outEl = arrayView('', d.output.array);
-    else outEl = varBox(d.output.name, d.output.value, { big: true });
-    output.append(h('div', { class: 'io-items' }, outEl));
-
-    if (d.shuffle && !reduceMotion) {
-      const [lo, hi] = d.shuffle; let n = 0;
-      const vals = [...outEl.querySelectorAll('.cell-v')];
-      shuffleTimer = setInterval(() => {
-        n++;
-        vals.forEach((v, i) => { v.textContent = n >= 14 ? d.output.array[i] : String(lo + Math.floor(Math.random() * (hi - lo + 1))); });
-        if (n >= 14) clearInterval(shuffleTimer);
-      }, 70);
-    }
-    return h('section', { class: 'expected', 'aria-label': 'מה הפעולה צריכה לעשות' },
-      h('h3', { class: 'sim-h', text: 'מה הפעולה צריכה לעשות' }),
-      h('div', { class: 'io' }, inputs, h('div', { class: 'io-arrow', 'aria-hidden': 'true' }, h('span', { class: 'arrow-glyph', text: '←' }), h('span', { text: 'הפעולה' })), output),
-      d.note ? h('p', { class: 'io-note', text: d.note }) : null);
-  }
-
-  // ---------- נגן הצעדים ----------
+  // ---------- ריצה בשלבים ----------
   let player = null;
-  function Player(steps, info) {
-    let idx = 0, timer = null;
-    const view = $('#run-view');
-    view.innerHTML = '';
-    const speeds = [1400, 900, 550, 300, 120];
-    let speedI = 2;
-    try { const s = +localStorage.getItem(KEY + ':speed'); if (s >= 0 && s < speeds.length) speedI = s; } catch (e) {}
+  function stopRun() { if (player) { player.dispose(); player = null; } const slot = $('#run-slot'); if (slot) slot.innerHTML = ''; clearMarks(); }
 
-    const btn = (label, title, fn, cls) => h('button', { class: 'pbtn ' + (cls || ''), type: 'button', title, 'aria-label': title, onclick: fn }, label);
-    const playBtn = btn('▶', 'נגן', () => toggle(), 'play');
-    const counter = h('span', { class: 'counter', 'aria-live': 'off' });
-    const speed = h('input', { type: 'range', min: '0', max: String(speeds.length - 1), value: String(speedI), 'aria-label': 'מהירות' });
-    speed.addEventListener('input', () => { speedI = +speed.value; try { localStorage.setItem(KEY + ':speed', String(speedI)); } catch (e) {} if (timer) { pause(); play(); } });
-    const scrub = h('input', { type: 'range', class: 'scrub', min: '0', max: String(Math.max(0, steps.length - 1)), value: '0', 'aria-label': 'צעד' });
-    scrub.addEventListener('input', () => { pause(); show(+scrub.value); });
-
-    const controls = h('div', { class: 'controls' },
-      h('div', { class: 'pbtns', dir: 'ltr' },
-        btn('⏮', 'מההתחלה', () => { pause(); show(0); }),
-        btn('◀', 'צעד אחורה', () => { pause(); show(idx - 1); }),
-        playBtn,
-        btn('▶|', 'צעד קדימה', () => { pause(); show(idx + 1); }),
-        btn('⏭', 'לסוף', () => { pause(); show(steps.length - 1); })),
-      h('label', { class: 'speed' }, h('span', { text: 'מהירות' }), speed),
-      counter);
-    const desc = h('div', { class: 'desc', role: 'status', 'aria-live': 'polite' });
+  function Player(steps, onFinish) {
+    let idx = 0, finished = false;
+    const slot = $('#run-slot');
+    const back = h('button', { class: 'btn', type: 'button', onclick: () => show(idx - 1) }, 'הרצה אחורה');
+    const fwd = h('button', { class: 'btn btn-primary', type: 'button', onclick: () => show(idx + 1) }, 'הרצה קדימה');
+    const all = h('button', { class: 'btn', type: 'button', onclick: () => show(steps.length - 1) }, 'הרץ הכל');
     const stage = h('div', { class: 'stage' });
     const con = h('pre', { class: 'console', dir: 'ltr' });
-    view.append(
-      h('h3', { class: 'sim-h', text: 'הריצה של הקוד שלכם' }),
-      controls, scrub, desc, stage,
-      h('div', { class: 'console-wrap' }, h('div', { class: 'console-title', text: 'פלט (מה שהודפס)' }), con),
-      info.truncated ? h('p', { class: 'note-small', text: 'הריצה ארוכה מאוד, ולכן מוצגים רק הצעדים הראשונים.' }) : null);
+    const view = h('section', { class: 'run-view', id: 'run-view', 'aria-label': 'ריצה בשלבים' },
+      h('h3', { class: 'sim-h', text: 'ריצה בשלבים' }),
+      h('div', { class: 'controls' }, back, fwd, all),
+      stage,
+      h('div', { class: 'console-wrap' }, h('div', { class: 'console-title', text: 'הדפסה:' }), con),
+      steps.truncated ? h('p', { class: 'note-small', text: 'הריצה ארוכה מאוד, ולכן מוצגים רק הצעדים הראשונים.' }) : null);
+    slot.append(view);
 
     function show(i) {
       idx = Math.max(0, Math.min(steps.length - 1, i));
-      scrub.value = String(idx);
       const s = steps[idx];
-      counter.textContent = `צעד ${idx + 1} מתוך ${steps.length}`;
-      desc.className = 'desc k-' + (s.kind || 'plain');
-      desc.textContent = s.desc || '';
       renderStage(stage, s);
       con.textContent = s.out || '';
-      if (s.kind === 'error') con.append(h('span', { class: 'con-err', text: (s.out && !s.out.endsWith('\n') ? '\n' : '') + 'שגיאה: ' + s.desc.replace(/^שגיאה: /, '') }));
+      if (s.kind === 'error') con.append(h('span', { class: 'con-err', text: (s.out && !s.out.endsWith('\n') ? '\n' : '') + s.desc }));
       con.scrollTop = con.scrollHeight;
-      runLine(s.kind === 'end' ? 0 : s.line);
+      runLine(s.line);
       if (s.kind === 'error') { clearMarks(); markLine(s.line, 'err-line'); }
-      if (idx >= steps.length - 1) pause();
+      back.disabled = idx === 0;
+      fwd.disabled = all.disabled = idx >= steps.length - 1;
+      if (idx >= steps.length - 1 && !finished) { finished = true; onFinish(slot); }
     }
-    function tickPlay() { if (idx >= steps.length - 1) { pause(); return; } show(idx + 1); }
-    function play() { if (idx >= steps.length - 1) show(0); playBtn.textContent = '⏸'; playBtn.title = 'עצירה'; playBtn.setAttribute('aria-label', 'עצירה'); timer = setInterval(tickPlay, speeds[speedI]); }
-    function pause() { clearInterval(timer); timer = null; playBtn.textContent = '▶'; playBtn.title = 'נגן'; playBtn.setAttribute('aria-label', 'נגן'); }
-    function toggle() { timer ? pause() : play(); }
     show(0);
-    if (steps.length > 1) play();
-    return { stop: pause };
+    return { dispose() {} };
   }
 
   function renderStage(stage, s) {
@@ -1981,36 +2054,28 @@ const QUESTIONS = [
       if (c.kind === 'arrnew') newArrs.add(c.arr);
     });
     const frames = s.frames || [];
-    if (!frames.length) { stage.append(h('p', { class: 'run-placeholder', text: 'התוכנית הסתיימה.' })); return; }
     for (let fi = frames.length - 1; fi >= 0; fi--) {
       const f = frames[fi];
       const isTop = fi === frames.length - 1;
-      const loop = f.loops && f.loops.length ? f.loops[f.loops.length - 1] : null;
       const head = h('div', { class: 'frame-head' },
-        h('span', { class: 'frame-where', text: f.name === 'Main' ? 'התוכנית הראשית' : 'בתוך הפעולה' }),
-        h('code', { class: 'frame-label', dir: 'ltr', text: f.label }),
-        loop && isTop ? h('span', { class: 'loop-badge' + (s.kind === 'loop' ? ' pulse' : '') },
-          h('span', { class: 'loop-ico', 'aria-hidden': 'true', text: '↻' }),
-          `לולאת ${loop.kind} — סיבוב ${loop.iter || 0}`) : null);
+        h('span', { class: 'frame-where', text: f.name === 'Main' ? 'התוכנית הראשית' : 'בתוך הפעולה' }));
       const scalars = h('div', { class: 'scalars' });
       const arrs = h('div', { class: 'arrays' });
-      // מצביעים: משתני לולאה
-      const pointers = [];
-      if (isTop && f.loops) f.loops.forEach(l => {
-        if (l.kind === 'for') l.vars.forEach(vn => { const vv = f.vars.find(x => x.name === vn); if (vv && vv.s && /^-?\d+$/.test(vv.s)) pointers.push({ name: vn, index: +vv.s }); });
-      });
+      // מצביעים של משתני לולאה — רק כשהם בתוך גבולות המערך
+      const loopVars = [];
+      if (isTop && f.loops) f.loops.forEach(l => { if (l.kind === 'for') l.vars.forEach(vn => { const vv = f.vars.find(x => x.name === vn); if (vv && vv.s && /^-?\d+$/.test(vv.s)) loopVars.push({ name: vn, index: +vv.s }); }); });
       f.vars.forEach(v => {
         if (v.type === 'string[]' && v.name === 'args') return;
         if (v.arr !== undefined) {
           const a = s.arrays[v.arr];
-          const ptrs = [...pointers];
+          const ptrs = isTop ? loopVars.filter(p => p.index >= 0 && p.index < a.values.length) : [];
           if (isTop && f.loops) f.loops.forEach(l => { if (l.kind === 'foreach' && l.arr === v.arr) ptrs.push({ name: '◆', index: l.idx }); });
-          arrs.append(arrayView(v.name, a.values, { type: v.type, changed: changedCells.get(v.arr), isNew: newArrs.has(v.arr), pointers: isTop ? ptrs : [] }));
+          const oob = isTop && s.kind === 'error' && s.oob && s.oob.arr === v.arr ? s.oob : null;
+          arrs.append(arrayView(v.name, a.values, { type: v.type, changed: changedCells.get(v.arr), isNew: newArrs.has(v.arr), pointers: ptrs, oob }));
         } else {
           scalars.append(varBox(v.name, v.s, { changed: changedVars.has(fi + ':' + v.name), unassigned: v.unassigned, type: v.type }));
         }
       });
-      // מערך שנוצר זה עתה אבל עוד לא נשמר במשתנה
       if (isTop) newArrs.forEach(id => {
         if (!f.vars.some(v => v.arr === id) && s.arrays[id]) arrs.append(arrayView('(מערך חדש)', s.arrays[id].values, { type: s.arrays[id].elem + '[]', isNew: true }));
       });
@@ -2022,10 +2087,8 @@ const QUESTIONS = [
     }
   }
 
-  // ---------- הרצה ובדיקה ----------
-  function sameJS(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  // ---------- בדיקה ----------
   const jsShow = x => Array.isArray(x) ? '{' + x.map(y => typeof y === 'string' ? `'${y}'` : y).join(', ') + '}' : typeof x === 'string' ? `'${x}'` : String(x);
-  function sigText(sig, name) { return `${sig.returns} ${name || '...'}(${sig.params.join(', ')})`; }
 
   function runTests(q, prog, mainRes) {
     const results = [];
@@ -2038,18 +2101,17 @@ const QUESTIONS = [
       if (all.length) msg += ' בקוד יש: ' + all.map(m => `${m.ret} ${m.name}(${m.params.map(p => p.type).join(', ')})`).join(' ; ');
       else msg += ' עדיין לא כתבתם פעולה מחוץ ל-Main.';
       results.push({ ok: false, text: 'הכותרת של הפעולה', detail: msg });
-      return { results, method: null };
+      return results;
     }
     results.push({ ok: true, text: `הכותרת של הפעולה נכונה: ${match.ret} ${match.name}(${match.params.map(p => p.type + ' ' + p.name).join(', ')})` });
     if (!match.isStatic) results.push({ ok: false, text: 'הפעולה צריכה להיות static', detail: `כתבו: public static ${match.ret} ${match.name}(...)` });
     const callers = mainRes.calledFrom.get(match.name);
     if (callers && callers.has('Main')) results.push({ ok: true, text: `התוכנית הראשית קוראת לפעולה ${match.name}` });
-    else if (!mainRes.error) results.push({ ok: false, text: `התוכנית הראשית לא קוראת לפעולה ${match.name}`, detail: `בתוך Main כתבו קריאה לפעולה, למשל: ${callExample(q, match)}` });
+    else if (!mainRes.error) results.push({ ok: false, text: `התוכנית הראשית לא קוראת לפעולה ${match.name}`, detail: 'בתוך Main כתבו קריאה לפעולה ושמרו את מה שהיא מחזירה במשתנה.' });
 
     const call = (...args) => {
       const it = CSharp.Interpreter(prog, { trace: false });
-      const vals = args.map((a, i) => CSharp.fromJS(a, match.params[i].type));
-      return CSharp.toJS(it.call(match, vals));
+      return CSharp.toJS(it.call(match, args.map((a, i) => CSharp.fromJS(a, match.params[i].type))));
     };
     for (const t of q.tests) {
       try {
@@ -2059,38 +2121,61 @@ const QUESTIONS = [
         } else {
           const got = call(...t.args);
           const label = `${match.name}(${t.args.map(jsShow).join(', ')})`;
-          if (sameJS(got, t.expect)) results.push({ ok: true, text: `${label} מחזירה ${jsShow(t.expect)}` });
+          if (JSON.stringify(got) === JSON.stringify(t.expect)) results.push({ ok: true, text: `${label} מחזירה ${jsShow(t.expect)}` });
           else results.push({ ok: false, text: `${label} צריכה להחזיר ${jsShow(t.expect)}`, detail: `אבל החזירה ${got === null ? 'null' : jsShow(got)}` });
         }
       } catch (e) {
-        if (e instanceof CSharp.CSError) results.push({ ok: false, text: t.name || `בדיקה עם ${(t.args || []).map(jsShow).join(', ')}`, detail: `שגיאה בשורה ${e.line}: ${e.message}`, line: e.line });
-        else throw e;
+        if (!(e instanceof CSharp.CSError)) throw e;
+        results.push({ ok: false, text: t.name || `בדיקה עם ${(t.args || []).map(jsShow).join(', ')}`, detail: `שגיאה בשורה ${e.line}: ${e.message}` });
       }
     }
-    return { results, method: match };
-  }
-  function callExample(q, m) {
-    const sample = { 'int': '10', 'char': "'#'", 'int[]': 'arr' };
-    const ret = m.ret === 'void' ? '' : `${m.ret} result = `;
-    return `${ret}${m.name}(${m.params.map(p => sample[p.type] || p.name).join(', ')});`;
+    return results;
   }
 
-  function runCode() {
+  function resultsBox(q, mainRes, results) {
+    const box = h('div', { class: 'results', 'aria-live': 'polite' });
+    const tips = [];
+    if (/System\.(Int32|Double|String|Boolean)\[\]/.test(mainRes.out))
+      tips.push('הדפסתם מערך ישירות, ולכן הופיע System.Int32[] ולא הערכים. כדי לראות את הערכים: Console.WriteLine(string.Join(", ", arr)); או לולאה שמדפיסה כל תא.');
+    if (!mainRes.out.trim() && !mainRes.error) tips.push('התוכנית לא הדפיסה כלום. הדפיסו את מה שהפעולה מחזירה כדי לראות אותו.');
+    if (mainRes.error) results.forEach(r => { if (r.detail && r.detail.endsWith(mainRes.error.message)) r.detail = 'נכשלה בגלל אותה שגיאה שמופיעה למעלה'; });
+    const allOk = !mainRes.error && results.every(r => r.ok);
+    if (mainRes.error) box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'שגיאה בזמן ריצה' }), ` בשורה ${mainRes.error.line}`), h('p', { class: 'res-err', text: mainRes.error.message }));
+    else if (allOk) box.append(h('div', { class: 'res-head good' }, h('strong', { text: 'כל הכבוד! הפעולה עובדת' })));
+    else box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'הקוד רץ, אבל יש מה לתקן' })));
+    const ul = h('ul', { class: 'res-list' });
+    results.forEach(r => ul.append(h('li', { class: r.ok ? 'ok' : 'no' },
+      h('span', { class: 'res-ico', 'aria-hidden': 'true', text: r.ok ? '✓' : '✗' }),
+      h('div', null, h('div', { class: 'res-t', dir: 'auto', text: r.text }), r.detail ? h('div', { class: 'res-d', dir: 'auto', text: r.detail }) : null))));
+    box.append(ul);
+    tips.forEach(t => box.append(h('p', { class: 'res-tip', text: t })));
+    if (allOk) {
+      qs(q.id).done = true; persist(); renderTabs();
+      const idx = QUESTIONS.findIndex(x => x.id === q.id);
+      const nextQ = QUESTIONS.slice(idx + 1).find(x => !qs(x.id).done) || QUESTIONS.find(x => !qs(x.id).done);
+      if (nextQ) box.append(h('button', { class: 'btn btn-next', type: 'button', onclick: () => go(nextQ.id) }, `לשאלה ${nextQ.id}`));
+      else box.append(h('p', { class: 'res-tip', text: 'סיימתם את כל השאלות!' }));
+    }
+    return box;
+  }
+
+  function checkCode() {
     const q = Q();
     if (!unlocked(q)) return;
     qs(q.id).code = getCode(); persist();
-    clearMarks();
-    if (player) { player.stop(); player = null; }
-    const box = $('#results'); box.hidden = false; box.innerHTML = '';
-    const src = getCode();
+    stopRun();
+    const slot = $('#run-slot');
+    const reveal = el => { if (window.innerWidth < 980) setTimeout(() => el.scrollIntoView({ behavior: smooth(), block: 'start' }), 50); else el.scrollIntoView({ behavior: smooth(), block: 'nearest' }); };
     let prog;
-    try { prog = CSharp.parse(src); }
+    try { prog = CSharp.parse(getCode()); }
     catch (e) {
       if (!(e instanceof CSharp.CSError)) throw e;
       markLine(e.line, 'err-line');
-      box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'שגיאת קומפילציה' }), h('span', { text: ` בשורה ${e.line}` })), h('p', { class: 'res-err', text: e.message }));
-      const rv = $('#run-view');
-      if (rv) { rv.innerHTML = ''; rv.append(h('h3', { class: 'sim-h', text: 'הריצה של הקוד שלכם' }), h('p', { class: 'run-placeholder', text: 'הקוד לא עבר קומפילציה, ולכן אין מה להציג. תקנו את השגיאה שמתחת לעורך ונסו שוב.' })); }
+      const box = h('div', { class: 'results' },
+        h('div', { class: 'res-head bad' }, h('strong', { text: 'שגיאת קומפילציה' }), ` בשורה ${e.line}`),
+        h('p', { class: 'res-err', text: e.message }),
+        h('p', { class: 'note-small', text: 'הקוד לא עבר קומפילציה, ולכן אין הדמיה. תקנו את השורה המסומנת בעורך ולחצו שוב על בדיקה.' }));
+      slot.append(box); reveal(box);
       return;
     }
     const it = CSharp.Interpreter(prog, { trace: true, readLine: () => window.prompt('Console.ReadLine() — הקלידו קלט:') || '' });
@@ -2099,62 +2184,33 @@ const QUESTIONS = [
     catch (e) {
       if (!(e instanceof CSharp.CSError)) throw e;
       markLine(e.line, 'err-line');
-      box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'שגיאה' })), h('p', { class: 'res-err', text: e.message }));
+      const box = h('div', { class: 'results' }, h('div', { class: 'res-head bad' }, h('strong', { text: 'שגיאה' })), h('p', { class: 'res-err', text: e.message }));
+      slot.append(box); reveal(box);
       return;
     }
-    const { results } = runTests(q, prog, mainRes);
-    if (mainRes.error) results.forEach(r => { if (r.detail && r.detail.endsWith(mainRes.error.message)) r.detail = 'נכשלה בגלל אותה שגיאה שמופיעה למעלה'; });
-    const tips = [];
-    if (/System\.(Int32|Double|String|Boolean)\[\]/.test(mainRes.out))
-      tips.push('הדפסתם מערך ישירות, ולכן הופיע System.Int32[] ולא הערכים. כדי לראות את הערכים: Console.WriteLine(string.Join(", ", arr)); או לולאה שמדפיסה כל תא.');
-    if (!mainRes.out.trim() && !mainRes.error) tips.push('התוכנית לא הדפיסה כלום. הדפיסו את התוצאה כדי לראות אותה בפלט.');
-
-    const allOk = !mainRes.error && results.every(r => r.ok);
-    if (mainRes.error) {
-      box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'שגיאה בזמן ריצה' }), h('span', { text: ` בשורה ${mainRes.error.line}` })), h('p', { class: 'res-err', text: mainRes.error.message }));
-    } else if (allOk) {
-      box.append(h('div', { class: 'res-head good' }, h('strong', { text: 'כל הכבוד! הפעולה עובדת' })));
-    } else {
-      box.append(h('div', { class: 'res-head bad' }, h('strong', { text: 'הקוד רץ, אבל יש מה לתקן' })));
-    }
-    const ul = h('ul', { class: 'res-list' });
-    results.forEach(r => ul.append(h('li', { class: r.ok ? 'ok' : 'no' },
-      h('span', { class: 'res-ico', 'aria-hidden': 'true', text: r.ok ? '✓' : '✗' }),
-      h('div', null, h('div', { class: 'res-t', dir: 'auto', text: r.text }), r.detail ? h('div', { class: 'res-d', dir: 'auto', text: r.detail }) : null))));
-    box.append(ul);
-    tips.forEach(t => box.append(h('p', { class: 'res-tip', text: t })));
-
-    const st = qs(q.id);
-    if (allOk) {
-      st.done = true; persist(); renderTabs();
-      const idx = QUESTIONS.findIndex(x => x.id === q.id);
-      const nextQ = QUESTIONS.slice(idx + 1).find(x => !qs(x.id).done) || QUESTIONS.find(x => !qs(x.id).done);
-      if (nextQ) box.append(h('button', { class: 'btn btn-next', type: 'button', onclick: () => go(nextQ.id) }, `לשאלה ${nextQ.id}`));
-      else box.append(h('p', { class: 'res-tip', text: 'סיימתם את כל השאלות!' }));
-    }
-    if (!$('#run-view')) renderSim();
-    if (mainRes.steps.length) player = Player(mainRes.steps, mainRes);
-    if (window.innerWidth < 900) setTimeout(() => box.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' }), 50);
+    const results = runTests(q, prog, mainRes);
+    mainRes.steps.truncated = mainRes.truncated;
+    player = Player(mainRes.steps, s => s.append(resultsBox(q, mainRes, results)));
+    reveal($('#run-view'));
   }
 
   function resetCode() {
     if (!confirm('למחוק את הקוד שכתבתם בשאלה הזו ולהתחיל מחדש?')) return;
     const q = Q(); qs(q.id).code = null; persist();
+    stopRun();
     setCode(q.starter); clearMarks();
-    $('#results').hidden = true;
-    renderSim();
   }
 
   function renderAll() {
     renderTabs();
+    renderSim();
     renderQuestion();
     renderCodeArea(false);
-    renderSim();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     initEditor();
-    $('#run').addEventListener('click', runCode);
+    $('#run').addEventListener('click', checkCode);
     $('#reset').addEventListener('click', resetCode);
     renderAll();
   });

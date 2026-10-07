@@ -300,6 +300,36 @@ code, .mono { font-family: var(--mono); }
 .arrays .cells-scroll { padding-top: 24px; margin-top: -6px; }
 .tab.done .tab-n { font-size: 12px; }
 
+/* תיבות שאפשר לערוך */
+.edit-hint { font-weight: 400; color: var(--pen); margin-inline-start: 10px; font-size: 13px; }
+.var-edit .var-val { border-style: dashed; border-color: var(--pen); background: #F1F5FF; cursor: text; }
+.var-edit .var-val:hover { background: var(--marker-soft); }
+.arr-edit .cell-v { border-style: dashed; border-color: var(--pen); background: #F1F5FF; cursor: text; }
+.arr-edit .cell + .cell .cell-v { border-left-style: none; }
+.arr-edit .cell + .cell { margin-left: 0; }
+.arr-edit .cell-v:hover { background: var(--marker-soft); }
+.f-row input::placeholder { color: var(--ink-3); opacity: 1; font-family: var(--sans); }
+.f-row input:placeholder-shown { text-align: right; direction: rtl; }
+
+/* כפתור הרצה קדימה מהבהב עד הלחיצה הראשונה */
+.btn.nudge { animation: nudge 1.3s ease-in-out infinite; }
+@keyframes nudge { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 216, 77, 0); } 50% { box-shadow: 0 0 0 7px var(--marker); } }
+
+/* כיווץ חלון "נסו את הפעולה" */
+.g-toggle { all: unset; display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer; box-sizing: border-box; }
+.g-toggle:focus-visible { outline: 3px solid var(--pen); outline-offset: 4px; border-radius: 4px; }
+.g-toggle .sim-h { margin: 0; }
+.chev { font-size: 18px; color: var(--ink-2); transition: transform .2s; }
+.game.collapsed .chev { transform: rotate(90deg); }
+.game.collapsed { padding-bottom: 16px; }
+.g-body { margin-top: 12px; }
+
+.f-row textarea.free { flex: 1; min-width: 0; font-family: var(--sans); font-size: 16px; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--white); resize: vertical; line-height: 1.5; }
+.f-row textarea.free:focus { border-color: var(--pen); outline: none; box-shadow: 0 0 0 3px rgba(45, 85, 200, .18); }
+.f-row textarea::placeholder { color: var(--ink-3); opacity: 1; }
+.f-item.ok textarea.free { background: var(--ok-soft); border-color: transparent; color: var(--ok); font-weight: 600; }
+.f-row:has(textarea) { align-items: flex-start; }
+
 /* ---------- מסכים צרים ---------- */
 @media (max-width: 980px) {
   html, body { height: auto; }
@@ -1558,7 +1588,29 @@ class Program
 }
 `;
 
-const WHAT_IT_DOES = { q: 'מה הפעולה עושה?', free: true, ok: 'יאללה לעבודה!' };
+const WHAT_IT_DOES = { q: 'מה הפעולה עושה?', free: true, ok: 'יאללה לעבודה!', placeholder: 'למשל: מחזירה מערך של מספרים שלמים באורך המספר שהתקבל' };
+const PH_GETS = 'למשל: string, int';
+const PH_RETURNS = 'למשל: \u2066char[]\u2069';
+
+// קוד מוכן למחצה — רק לשאלה 1
+const STARTER_Q1 = `using System;
+
+class Program
+{
+    // הגדרת הפעולה - השלימו:
+    static ___ EmptyArrey(_____)
+    {
+        int[] arr = new int[___];
+        return arr;
+    }
+
+    static void Main(string[] args)
+    {
+        int[] a = EmptyArrey(10); // קריאה לפעולה
+        Console.WriteLine(string.Join(", ", a)); // הדפסת ערכי המערך בשורה אחת
+    }
+}
+`;
 
 const QUESTIONS = [
   {
@@ -1569,8 +1621,8 @@ const QUESTIONS = [
       fn: n => Array(n).fill(0),
     },
     followups: [
-      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?$/, hint: 'הסתכלו על התיבה שבה הכנסתם ערך בהדמיה — מה הטיפוס שלה?' },
-      { q: 'מה הפעולה מחזירה?', accept: ['int[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^int([a-z_]\w*)?$/, hint: 'הסתכלו על התיבה שבה הכנסתם ערך בהדמיה — מה הטיפוס שלה?' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['int[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
       WHAT_IT_DOES,
     ],
     signature: { returns: 'int[]', params: ['int'] },
@@ -1579,7 +1631,7 @@ const QUESTIONS = [
       { args: [3], expect: [0, 0, 0] },
       { args: [1], expect: [0] },
     ],
-    starter: STARTER,
+    starter: STARTER_Q1,
   },
   {
     id: 2,
@@ -1592,8 +1644,8 @@ const QUESTIONS = [
       fn: (n, c) => Array(n).fill(c),
     },
     followups: [
-      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?,char([a-z_]\w*)?$/, hint: 'הפעולה מקבלת שני ערכים. כתבו את שני הטיפוסים לפי הסדר, מופרדים בפסיק.' },
-      { q: 'מה הפעולה מחזירה?', accept: ['char[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^int([a-z_]\w*)?,char([a-z_]\w*)?$/, hint: 'הפעולה מקבלת שני ערכים. כתבו את שני הטיפוסים לפי הסדר, מופרדים בפסיק.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['char[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
       WHAT_IT_DOES,
     ],
     signature: { returns: 'char[]', params: ['int', 'char'] },
@@ -1616,8 +1668,8 @@ const QUESTIONS = [
       fn: (min, max) => Array.from({ length: 10 }, () => min + Math.floor(Math.random() * (max - min + 1))),
     },
     followups: [
-      { q: 'מה הפעולה מקבלת?', pattern: /^int([a-z_]\w*)?,int([a-z_]\w*)?$/, hint: 'הפעולה מקבלת שני מספרים שלמים. כתבו את שני הטיפוסים, מופרדים בפסיק.' },
-      { q: 'מה הפעולה מחזירה?', accept: ['int[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^int([a-z_]\w*)?,int([a-z_]\w*)?$/, hint: 'הפעולה מקבלת שני מספרים שלמים. כתבו את שני הטיפוסים, מופרדים בפסיק.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['int[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
       WHAT_IT_DOES,
     ],
     signature: { returns: 'int[]', params: ['int', 'int'] },
@@ -1664,8 +1716,8 @@ const QUESTIONS = [
       fn: arr => arr.reduce((a, b) => a + b, 0),
     },
     followups: [
-      { q: 'מה הפעולה מקבלת?', pattern: /^int\[\]([a-z_]\w*)?$/, hint: 'הסתכלו על הטיפוס שכתוב ליד המערך שמילאתם.' },
-      { q: 'מה הפעולה מחזירה?', accept: ['int'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^int\[\]([a-z_]\w*)?$/, hint: 'הסתכלו על הטיפוס שכתוב ליד המערך שמילאתם.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['int'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
       WHAT_IT_DOES,
     ],
     signature: { returns: 'int', params: ['int[]'] },
@@ -1748,7 +1800,7 @@ const QUESTIONS = [
   const getCode = () => cm ? cm.getValue() : textarea.value;
   const setCode = s => { if (cm) { cm.setValue(s); cm.clearHistory(); } else textarea.value = s; };
   let saveTimer = null;
-  function saveCodeSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { qs(current).code = getCode(); persist(); }, 400); }
+  function saveCodeSoon() { clearTimeout(saveTimer); const id = current; saveTimer = setTimeout(() => { if (id === current && unlocked(Q())) { qs(id).code = getCode(); persist(); } }, 400); }
   let marked = [];
   function clearMarks() { if (!cm) return; marked.forEach(([l, c]) => cm.removeLineClass(l, 'background', c)); marked = []; }
   function markLine(line, cls) {
@@ -1775,11 +1827,11 @@ const QUESTIONS = [
       }, h('span', { class: 'tab-n', text: st.done ? '✓' : String(q.id) })));
     });
     const done = QUESTIONS.filter(q => qs(q.id).done).length;
-    $('#progress').textContent = `${done} מתוך ${QUESTIONS.length} שאלות הושלמו`;
+    $('#progress').textContent = 'עפרי לין סטרשנוב';
   }
   function go(id) {
     stopRun();
-    qs(current).code = getCode(); persist();
+    if (unlocked(Q())) { clearTimeout(saveTimer); qs(current).code = getCode(); persist(); }
     current = id;
     try { localStorage.setItem(KEY + ':current', String(id)); } catch (e) {}
     renderAll();
@@ -1798,7 +1850,7 @@ const QUESTIONS = [
     $('#try-first').hidden = tried;
     q.followups.forEach((f, i) => {
       const id = `f-${q.id}-${i}`;
-      const input = h('input', { id, type: 'text', dir: f.free ? 'auto' : 'ltr', autocomplete: 'off', spellcheck: 'false', value: st.answers[i] || '', class: f.free ? 'free' : null });
+      const input = h(f.free ? 'textarea' : 'input', { id, type: f.free ? null : 'text', rows: f.free ? '2' : null, dir: f.free ? 'auto' : 'ltr', autocomplete: 'off', spellcheck: 'false', value: st.answers[i] || '', placeholder: f.placeholder || null, class: f.free ? 'free' : null });
       const btn = h('button', { class: 'btn btn-check', type: 'button', onclick: () => check() }, f.free ? 'אישור' : 'בדיקה');
       const msg = h('div', { class: 'f-msg', role: 'status', 'aria-live': 'polite' });
       const item = h('div', { class: 'f-item' + (st.correct[i] ? ' ok' : '') + (tried ? '' : ' off') },
@@ -1824,7 +1876,7 @@ const QUESTIONS = [
           item.classList.remove('shake'); void item.offsetWidth; item.classList.add('shake');
         }
       }
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+      input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); check(); } });
       input.addEventListener('input', () => { st.answers[i] = input.value; persist(); });
       list.append(item);
     });
@@ -1837,7 +1889,7 @@ const QUESTIONS = [
     $('#code-lock').hidden = open;
     $('#code-body').hidden = !open;
     if (open) {
-      setCode(st.code !== null ? st.code : q.starter);
+      setCode(st.code ? st.code : q.starter);
       if (cm) setTimeout(() => cm.refresh(), 0);
       if (justUnlocked) {
         sec.classList.add('reveal');
@@ -1949,23 +2001,36 @@ const QUESTIONS = [
       else outArea.append(varBox(g.returns, fmtVal(res, g.returns), { big: true, born: true }));
       const firstTry = !st.tried;
       st.tried++;
-      st.history.unshift({ i: '(' + args.map((a, k) => fmtVal(a, g.params[k].type)).join(', ') + ')', o: fmtVal(res, g.returns) });
+      const inStr = '(' + args.map((a, k) => fmtVal(a, g.params[k].type)).join(', ') + ')';
+      if (!st.history.some(r => r.i === inStr)) st.history.unshift({ i: inStr, o: fmtVal(res, g.returns) });
       st.history = st.history.slice(0, 8);
       persist(); renderHist();
       if (firstTry) renderQuestion();
     }
 
-    const card = h('section', { class: 'game', 'aria-label': 'נסו את הפעולה' },
-      h('h3', { class: 'sim-h', text: 'נסו את הפעולה' }),
-      h('div', { class: 'g-block' }, h('div', { class: 'io-label', text: 'הפעולה מקבלת:' }), inRow),
+    const toggle = h('button', { class: 'g-toggle', type: 'button', 'aria-expanded': 'true', 'aria-controls': 'game-body' },
+      h('span', { class: 'sim-h', text: 'נסו את הפעולה' }), h('span', { class: 'chev', 'aria-hidden': 'true', text: '▾' }));
+    const body = h('div', { class: 'g-body', id: 'game-body' },
+      h('div', { class: 'g-block' },
+        h('div', { class: 'io-label' }, 'הפעולה מקבלת:', h('span', { class: 'edit-hint' }, h('span', { 'aria-hidden': 'true', text: '✎ ' }), 'לחצו על הערכים כדי לשנות אותם')),
+        inRow),
       h('div', { class: 'g-machine' },
         h('button', { class: 'btn btn-run', type: 'button', onclick: runGame }, 'הפעילו את הפעולה'),
         err),
       h('div', { class: 'g-block' }, h('div', { class: 'io-label', text: 'הפעולה מחזירה:' }), outArea),
       histWrap);
+    const card = h('section', { class: 'game', id: 'game', 'aria-label': 'נסו את הפעולה' }, toggle, body);
+    toggle.addEventListener('click', () => setGameOpen(card.classList.contains('collapsed')));
     renderHist();
     card.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input')) runGame(); });
     return card;
+  }
+
+  function setGameOpen(open) {
+    const card = $('#game'); if (!card) return;
+    card.classList.toggle('collapsed', !open);
+    $('.g-toggle', card).setAttribute('aria-expanded', String(open));
+    $('#game-body').hidden = !open;
   }
 
   function paramEditor(p, pi, vals) {
@@ -2016,7 +2081,7 @@ const QUESTIONS = [
     let idx = 0, finished = false;
     const slot = $('#run-slot');
     const back = h('button', { class: 'btn', type: 'button', onclick: () => show(idx - 1) }, 'הרצה אחורה');
-    const fwd = h('button', { class: 'btn btn-primary', type: 'button', onclick: () => show(idx + 1) }, 'הרצה קדימה');
+    const fwd = h('button', { class: 'btn btn-primary nudge', type: 'button', onclick: () => { fwd.classList.remove('nudge'); show(idx + 1); } }, 'הרצה קדימה');
     const all = h('button', { class: 'btn', type: 'button', onclick: () => show(steps.length - 1) }, 'הרץ הכל');
     const stage = h('div', { class: 'stage' });
     const con = h('pre', { class: 'console', dir: 'ltr' });
@@ -2167,7 +2232,11 @@ const QUESTIONS = [
     const slot = $('#run-slot');
     const reveal = el => { if (window.innerWidth < 980) setTimeout(() => el.scrollIntoView({ behavior: smooth(), block: 'start' }), 50); else el.scrollIntoView({ behavior: smooth(), block: 'nearest' }); };
     let prog;
-    try { prog = CSharp.parse(getCode()); }
+    try {
+      const blankLine = getCode().split('\n').findIndex(l => /___/.test(l.replace(/\/\/.*$/, '')));
+      if (blankLine >= 0) throw new CSharp.CSError('יש בקוד מקום ריק להשלמה (___). החליפו את הקווים בקוד המתאים.', blankLine + 1, 'compile');
+      prog = CSharp.parse(getCode());
+    }
     catch (e) {
       if (!(e instanceof CSharp.CSError)) throw e;
       markLine(e.line, 'err-line');
@@ -2190,6 +2259,7 @@ const QUESTIONS = [
     }
     const results = runTests(q, prog, mainRes);
     mainRes.steps.truncated = mainRes.truncated;
+    setGameOpen(false);
     player = Player(mainRes.steps, s => s.append(resultsBox(q, mainRes, results)));
     reveal($('#run-view'));
   }

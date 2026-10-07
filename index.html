@@ -278,7 +278,7 @@ code, .mono { font-family: var(--mono); }
 .var-edit .var-val:focus-within { box-shadow: 0 0 0 3px rgba(45, 85, 200, .25); background: var(--marker-soft); }
 .var-in { width: 3.2em; border: 0; background: transparent; font-family: var(--mono); font-size: 18px; font-weight: 600; text-align: center; padding: 3px 0; outline: none; }
 .var-val .q { font-family: var(--mono); font-weight: 600; color: var(--ink-2); }
-.var-val .q + .var-in { width: 1.1em; }
+.var-in.t-char { width: 1.1em; }
 .var-edit .var-val:has(.q) { padding: 0 10px; }
 .cell-in { font: inherit; font-family: var(--mono); text-align: center; padding: 0; outline: none; color: var(--ink); }
 .cell-in:focus { background: var(--marker-soft); }
@@ -329,6 +329,24 @@ code, .mono { font-family: var(--mono); }
 .f-row textarea::placeholder { color: var(--ink-3); opacity: 1; }
 .f-item.ok textarea.free { background: var(--ok-soft); border-color: transparent; color: var(--ok); font-weight: 600; }
 .f-row:has(textarea) { align-items: flex-start; }
+
+/* שאלות בונוס */
+.tab.bonus { border-color: #C9B6EC; background: #F6F1FF; color: #5B2DA8; }
+.tab.bonus .tab-n { background: #E7DCFA; color: #5B2DA8; }
+.tab.bonus.on { border-color: #5B2DA8; box-shadow: 0 2px 0 #5B2DA8; }
+.tab.bonus.done .tab-n { background: var(--ok); color: var(--white); }
+.tab-b { font-size: 13px; font-weight: 600; }
+.tabs .tab.bonus:first-of-type, .tab:not(.bonus) + .tab.bonus { margin-inline-start: 10px; }
+.q-title.bonus { color: #5B2DA8; }
+
+/* תאים לערכים ארוכים (מחרוזות, double) */
+.cell { width: auto; min-width: var(--cell); }
+.cell-v { width: auto; min-width: var(--cell); padding: 0 6px; }
+.var-in.t-string { width: 5.5em; text-align: center; }
+.var-in.t-double { width: 4em; }
+.arr-edit.t-string .cell-in { width: 5.5em; }
+.arr-edit.t-double .cell-in { width: 3.6em; }
+.arr-edit .cell-in { width: var(--cell); }
 
 /* ---------- מסכים צרים ---------- */
 @media (max-width: 980px) {
@@ -473,7 +491,7 @@ const CSharp = (() => {
       case 'string': return JSON.stringify(v.v);
       case 'bool': return v.v ? 'true' : 'false';
       case 'null': return 'null';
-      case 'double': return fmtDouble(v.v);
+      case 'double': { const d = fmtDouble(v.v); return /^-?\d+$/.test(d) ? d + '.0' : d; }
       case 'array': return v.elem + '[' + v.v.length + ']';
       case 'Random': return 'Random';
     }
@@ -1308,6 +1326,9 @@ const CSharp = (() => {
             case 'Trim': return V.str(o.v.trim());
             case 'ToCharArray': { const arr = makeArray('char', [...o.v].map(ch => V.chr(ch.charCodeAt(0)))); pending.push({ kind: 'arrnew', arr: arr.id }); return arr; }
             case 'ToString': return o;
+            case 'Equals': return V.bool(a[0] && a[0].t === 'string' && a[0].v === o.v);
+            case 'StartsWith': return V.bool(o.v.startsWith(toCsString(a[0])));
+            case 'EndsWith': return V.bool(o.v.endsWith(toCsString(a[0])));
           }
         }
         if (m === 'ToString') return V.str(toCsString(o));
@@ -1548,14 +1569,17 @@ if (typeof module !== 'undefined') module.exports = CSharp;
 
    מבנה שאלה:
    id        — מספר השאלה (זה גם השם שלה בלשונית)
+   bonus     — true לשאלת בונוס (מופיעה בצבע אחר בסרגל העליון)
    game      — "הפעולה הסודית" שהתלמידים מנסים בחלון ההדמיה:
                  params:  הפרמטרים שהתלמיד מכניס. לכל אחד:
                             label  — מה כתוב על התיבה (למשל 'int' או 'int min')
-                            type   — 'int' | 'char' | 'int[]'
+                            type   — 'int' | 'double' | 'char' | 'string'
+                                     או מערך של אחד מהם: 'int[]' | 'double[]' | 'char[]' | 'string[]'
                             value  — ערך התחלתי (במערך: רשימת מספרים)
                             min/max — טווח מותר למספר (לא חובה)
                             maxLen — מספר תאים מקסימלי במערך (לא חובה)
-                 returns: הטיפוס שהפעולה מחזירה — 'int' | 'char' | 'int[]' | 'char[]'
+                            minLen — מספר תאים מינימלי במערך (לא חובה)
+                 returns: הטיפוס שהפעולה מחזירה (אותם טיפוסים כמו בפרמטרים)
                  validate:(לא חובה) פונקציה שמקבלת את הערכים ומחזירה הודעת שגיאה או null
                  fn:      הפעולה עצמה, ב-JavaScript. מקבלת את הערכים ומחזירה תוצאה
                           (char נכתב כמחרוזת של תו אחד)
@@ -1730,6 +1754,186 @@ const QUESTIONS = [
     ],
     starter: STARTER,
   },
+  {
+    id: 5,
+    game: {
+      params: [{ label: 'int[]', type: 'int[]', value: ['3', '8', '2', '5'], min: -99, max: 99, minLen: 1, maxLen: 10 }],
+      returns: 'int',
+      fn: arr => Math.max(...arr),
+    },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^int\[\]([a-z_]\w*)?$/, hint: 'הסתכלו על הטיפוס שכתוב ליד המערך שמילאתם.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['int'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
+    signature: { returns: 'int', params: ['int[]'] },
+    tests: [
+      { args: [[3, 8, 2, 5]], expect: 8 },
+      { args: [[1, 2, 10]], expect: 10 },
+      { args: [[9, 4, 1]], expect: 9 },
+      { args: [[7]], expect: 7 },
+      { args: [[-4, -2, -9]], expect: -2 },
+    ],
+    starter: STARTER,
+  },
+  {
+    id: 6,
+    game: {
+      params: [{ label: 'int', type: 'int', value: '5', min: 0, max: 20 }],
+      returns: 'int[]',
+      fn: n => Array.from({ length: n }, (_, i) => i + 1),
+    },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^int([a-z_]\w*)?$/, hint: 'הסתכלו על התיבה שבה הכנסתם ערך — מה הטיפוס שלה?' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['int[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
+    signature: { returns: 'int[]', params: ['int'] },
+    tests: [
+      { args: [5], expect: [1, 2, 3, 4, 5] },
+      { args: [1], expect: [1] },
+      { args: [8], expect: [1, 2, 3, 4, 5, 6, 7, 8] },
+    ],
+    starter: STARTER,
+  },
+  {
+    id: 7,
+    game: {
+      params: [
+        { label: 'string[] names', type: 'string[]', value: ['ofri', 'idan', 'noam'], maxLen: 8 },
+        { label: 'string name', type: 'string', value: 'ofri' },
+      ],
+      returns: 'int',
+      fn: (names, name) => names.filter(x => x === name).length,
+    },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^string\[\]([a-z_]\w*)?,string([a-z_]\w*)?$/, hint: 'הפעולה מקבלת שני ערכים: מערך של מחרוזות ומחרוזת אחת. כתבו את הטיפוסים לפי הסדר, מופרדים בפסיק.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['int'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
+    signature: { returns: 'int', params: ['string[]', 'string'] },
+    tests: [
+      { args: [['ofri', 'idan', 'noam'], 'ofri'], expect: 1 },
+      { args: [['dana', 'tal', 'dana', 'dana'], 'dana'], expect: 3 },
+      { args: [['ofri', 'idan'], 'yoni'], expect: 0 },
+      { args: [['Ofri', 'ofri'], 'ofri'], expect: 1 },
+      { args: [[], 'ofri'], expect: 0 },
+    ],
+    starter: STARTER,
+  },
+  {
+    id: 8,
+    game: {
+      params: [{ label: 'int[]', type: 'int[]', value: ['4', '7', '2', '9', '6'], min: -99, max: 99, maxLen: 10 }],
+      returns: 'int',
+      fn: arr => arr.filter(x => x % 2 === 0).length,
+    },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^int\[\]([a-z_]\w*)?$/, hint: 'הסתכלו על הטיפוס שכתוב ליד המערך שמילאתם.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['int'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
+    signature: { returns: 'int', params: ['int[]'] },
+    tests: [
+      { args: [[4, 7, 2, 9, 6]], expect: 3 },
+      { args: [[1, 3, 5]], expect: 0 },
+      { args: [[2, 4, 6, 8]], expect: 4 },
+      { args: [[0, -2, -3]], expect: 2 },
+      { args: [[]], expect: 0 },
+    ],
+    starter: STARTER,
+  },
+  {
+    id: 9,
+    game: {
+      params: [{ label: 'double[]', type: 'double[]', value: ['3.7', '1.2', '6.5'], min: -999, max: 999, maxLen: 8 }],
+      returns: 'double[]',
+      fn: arr => arr.map(x => x * 2),
+    },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^double\[\]([a-z_]\w*)?$/, hint: 'הסתכלו על הטיפוס שכתוב ליד המערך שמילאתם.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['double[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
+    signature: { returns: 'double[]', params: ['double[]'] },
+    tests: [
+      { args: [[3.7, 1.2, 6.5]], expect: [7.4, 2.4, 13] },
+      { args: [[0.5]], expect: [1] },
+      { args: [[-1.5, 0, 10]], expect: [-3, 0, 20] },
+      { args: [[]], expect: [] },
+    ],
+    starter: STARTER,
+  },
+  {
+    id: 10,
+    bonus: true,
+    game: {
+      params: [{ label: 'char[]', type: 'char[]', value: ['s', '#', 'g', '='], minLen: 1, maxLen: 10 }],
+      returns: 'char[]',
+      fn: arr => [arr[arr.length - 1], ...arr.slice(0, -1)],
+    },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^char\[\]([a-z_]\w*)?$/, hint: 'הסתכלו על הטיפוס שכתוב ליד המערך שמילאתם.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['char[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
+    signature: { returns: 'char[]', params: ['char[]'] },
+    tests: [
+      { args: [['s', '#', 'g', '=']], expect: ['=', 's', '#', 'g'] },
+      { args: [['a', 'b']], expect: ['b', 'a'] },
+      { args: [['x']], expect: ['x'] },
+      { args: [['1', '2', '3', '4', '5', '6']], expect: ['6', '1', '2', '3', '4', '5'] },
+    ],
+    starter: STARTER,
+  },
+  {
+    id: 11,
+    bonus: true,
+    game: {
+      params: [
+        { label: 'int[] arr', type: 'int[]', value: ['3', '5', '3', '7'], min: -99, max: 99, maxLen: 10 },
+        { label: 'int num', type: 'int', value: '3', min: -99, max: 99 },
+      ],
+      returns: 'int[]',
+      fn: (arr, num) => arr.filter(x => x !== num),
+    },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^int\[\]([a-z_]\w*)?,int([a-z_]\w*)?$/, hint: 'הפעולה מקבלת שני ערכים: מערך ומספר. כתבו את הטיפוסים לפי הסדר, מופרדים בפסיק.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['int[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
+    signature: { returns: 'int[]', params: ['int[]', 'int'] },
+    tests: [
+      { args: [[3, 5, 3, 7], 3], expect: [5, 7] },
+      { args: [[1, 2, 4], 9], expect: [1, 2, 4] },
+      { args: [[4, 4, 4], 4], expect: [] },
+      { args: [[8, 1, 8, 2, 8], 8], expect: [1, 2] },
+      { args: [[], 1], expect: [] },
+    ],
+    starter: STARTER,
+  },
+  {
+    id: 12,
+    bonus: true,
+    game: {
+      params: [{ label: 'int[]', type: 'int[]', value: ['2', '5', '2', '0'], min: 0, max: 9, maxLen: 10 }],
+      returns: 'int[]',
+      fn: arr => { const c = Array(10).fill(0); arr.forEach(x => c[x]++); return c; },
+    },
+    followups: [
+      { q: 'מה הפעולה מקבלת?', placeholder: PH_GETS, pattern: /^int\[\]([a-z_]\w*)?$/, hint: 'הסתכלו על הטיפוס שכתוב ליד המערך שמילאתם.' },
+      { q: 'מה הפעולה מחזירה?', placeholder: PH_RETURNS, accept: ['int[]'], hint: 'הסתכלו על הטיפוס שכתוב ליד מה שהפעולה החזירה.' },
+      WHAT_IT_DOES,
+    ],
+    signature: { returns: 'int[]', params: ['int[]'] },
+    tests: [
+      { args: [[2, 5, 2, 0]], expect: [1, 0, 2, 0, 0, 1, 0, 0, 0, 0] },
+      { args: [[9, 9, 9]], expect: [0, 0, 0, 0, 0, 0, 0, 0, 0, 3] },
+      { args: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], expect: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] },
+      { args: [[]], expect: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+    ],
+    starter: STARTER,
+  },
 ];
 
 </script>
@@ -1820,11 +2024,11 @@ const QUESTIONS = [
     QUESTIONS.forEach(q => {
       const st = qs(q.id);
       nav.append(h('button', {
-        class: 'tab' + (q.id === current ? ' on' : '') + (st.done ? ' done' : ''),
+        class: 'tab' + (q.id === current ? ' on' : '') + (st.done ? ' done' : '') + (q.bonus ? ' bonus' : ''),
         'aria-current': q.id === current ? 'page' : null,
-        'aria-label': `שאלה ${q.id}${st.done ? ' (הושלמה)' : ''}`,
+        'aria-label': `${q.bonus ? 'שאלת בונוס' : 'שאלה'} ${q.id}${st.done ? ' (הושלמה)' : ''}`,
         onclick: () => go(q.id),
-      }, h('span', { class: 'tab-n', text: st.done ? '✓' : String(q.id) })));
+      }, h('span', { class: 'tab-n', text: st.done ? '✓' : (q.bonus ? '★' : String(q.id)) }), q.bonus ? h('span', { class: 'tab-b', text: `בונוס ${q.id}` }) : null));
     });
     const done = QUESTIONS.filter(q => qs(q.id).done).length;
     $('#progress').textContent = 'עפרי לין סטרשנוב';
@@ -1844,7 +2048,8 @@ const QUESTIONS = [
 
   function renderQuestion() {
     const q = Q(), st = qs(q.id);
-    $('#q-title').textContent = `שאלה ${q.id}`;
+    $('#q-title').textContent = `${q.bonus ? 'שאלת בונוס' : 'שאלה'} ${q.id}`;
+    $('#q-title').classList.toggle('bonus', !!q.bonus);
     const list = $('#followups'); list.innerHTML = '';
     const tried = st.tried > 0;
     $('#try-first').hidden = tried;
@@ -1936,6 +2141,8 @@ const QUESTIONS = [
   const fmtVal = (v, type) => {
     if (type.endsWith('[]')) return '{' + v.map(x => fmtVal(x, type.slice(0, -2))).join(', ') + '}';
     if (type === 'char') return `'${v}'`;
+    if (type === 'string') return `"${v}"`;
+    if (type === 'double') { const s = String(parseFloat(Number(v).toPrecision(12))); return /^-?\d+$/.test(s) ? s + '.0' : s; }
     return String(v);
   };
 
@@ -1972,25 +2179,18 @@ const QUESTIONS = [
       for (let pi = 0; pi < g.params.length; pi++) {
         const p = g.params[pi], v = vals[pi];
         const label = g.params.length > 1 ? `בתיבה ${p.label}: ` : '';
-        if (p.type === 'int') {
-          const t = String(v).trim();
-          if (!/^-?\d+$/.test(t)) { err.textContent = label + 'צריך לכתוב מספר שלם'; return; }
-          const n = parseInt(t, 10);
-          if (p.min !== undefined && (n < p.min || n > p.max)) { err.textContent = label + `בחרו מספר בין ${p.min} ל-${p.max}`; return; }
-          args.push(n);
-        } else if (p.type === 'char') {
-          if ([...String(v)].length !== 1) { err.textContent = label + 'צריך לכתוב תו אחד בדיוק'; return; }
-          args.push(String(v));
-        } else if (p.type === 'int[]') {
-          const arr = [];
+        if (p.type.endsWith('[]')) {
+          const el = p.type.slice(0, -2), arr = [];
           for (let k = 0; k < v.length; k++) {
-            const t = String(v[k]).trim();
-            if (!/^-?\d+$/.test(t)) { err.textContent = `בתא ${k} צריך לכתוב מספר שלם`; return; }
-            const n = parseInt(t, 10);
-            if (p.min !== undefined && (n < p.min || n > p.max)) { err.textContent = `בתא ${k}: בחרו מספר בין ${p.min} ל-${p.max}`; return; }
-            arr.push(n);
+            const r = parseGameVal(v[k], el, p);
+            if (r.err) { err.textContent = `${label}בתא ${k}: ${r.err}`; return; }
+            arr.push(r.v);
           }
           args.push(arr);
+        } else {
+          const r = parseGameVal(v, p.type, p);
+          if (r.err) { err.textContent = label + r.err; return; }
+          args.push(r.v);
         }
       }
       const vErr = g.validate && g.validate(...args);
@@ -2026,6 +2226,28 @@ const QUESTIONS = [
     return card;
   }
 
+  function parseGameVal(raw, type, p) {
+    const t = String(raw).trim();
+    const range = n => (p.min !== undefined && (n < p.min || n > p.max)) ? `בחרו מספר בין ${p.min} ל-${p.max}` : null;
+    if (type === 'int') {
+      if (!/^-?\d+$/.test(t)) return { err: 'צריך לכתוב מספר שלם' };
+      const n = parseInt(t, 10); const e = range(n); return e ? { err: e } : { v: n };
+    }
+    if (type === 'double') {
+      if (!/^-?\d+(\.\d+)?$/.test(t)) return { err: 'צריך לכתוב מספר (אפשר עם נקודה עשרונית, למשל 3.5)' };
+      const n = parseFloat(t); const e = range(n); return e ? { err: e } : { v: n };
+    }
+    if (type === 'char') {
+      if ([...String(raw)].length !== 1) return { err: 'צריך לכתוב תו אחד בדיוק' };
+      return { v: String(raw) };
+    }
+    if (type === 'string') {
+      if (/["\\]/.test(String(raw))) return { err: 'אי אפשר להשתמש במירכאות או ב-\\ בתוך המחרוזת' };
+      return { v: String(raw) };
+    }
+    return { err: 'טיפוס לא נתמך' };
+  }
+
   function setGameOpen(open) {
     const card = $('#game'); if (!card) return;
     card.classList.toggle('collapsed', !open);
@@ -2033,21 +2255,29 @@ const QUESTIONS = [
     $('#game-body').hidden = !open;
   }
 
+  const EDIT = {
+    int: { mode: 'numeric', max: '4', def: '0' },
+    double: { mode: 'decimal', max: '7', def: '0.0' },
+    char: { mode: null, max: '1', def: 'a', q: "'" },
+    string: { mode: null, max: '12', def: 'abc', q: '"' },
+  };
   function paramEditor(p, pi, vals) {
-    if (p.type === 'int[]') {
-      const wrap = h('div', { class: 'arr arr-edit' });
+    if (p.type.endsWith('[]')) {
+      const el = p.type.slice(0, -2), ed = EDIT[el];
+      const wrap = h('div', { class: 'arr arr-edit t-' + el });
       const draw = () => {
         wrap.innerHTML = '';
         const cells = h('div', { class: 'cells', dir: 'ltr' });
         vals[pi].forEach((v, k) => {
-          const inp = h('input', { class: 'cell-v cell-in', type: 'text', inputmode: 'numeric', value: v, 'aria-label': `תא ${k}`, maxlength: '4' });
+          const inp = h('input', { class: 'cell-v cell-in', type: 'text', dir: 'ltr', inputmode: ed.mode, value: v, 'aria-label': `תא ${k}`, maxlength: ed.max });
           inp.addEventListener('input', () => { vals[pi][k] = inp.value; });
+          inp.addEventListener('focus', () => inp.select());
           cells.append(h('div', { class: 'cell' }, inp, h('div', { class: 'cell-i', text: String(k) })));
         });
         const canAdd = vals[pi].length < (p.maxLen || 10);
         const tools = h('div', { class: 'arr-tools' },
-          h('button', { class: 'mini', type: 'button', disabled: !canAdd, 'aria-label': 'הוספת תא', onclick: () => { vals[pi].push('0'); draw(); const all = wrap.querySelectorAll('.cell-in'); all[all.length - 1].select(); } }, '+ תא'),
-          h('button', { class: 'mini', type: 'button', disabled: !vals[pi].length, 'aria-label': 'מחיקת התא האחרון', onclick: () => { vals[pi].pop(); draw(); } }, '− תא'));
+          h('button', { class: 'mini', type: 'button', disabled: !canAdd, 'aria-label': 'הוספת תא', onclick: () => { vals[pi].push(ed.def); draw(); const all = wrap.querySelectorAll('.cell-in'); all[all.length - 1].focus(); } }, '+ תא'),
+          h('button', { class: 'mini', type: 'button', disabled: vals[pi].length <= (p.minLen || 0), 'aria-label': 'מחיקת התא האחרון', onclick: () => { vals[pi].pop(); draw(); } }, '− תא'));
         wrap.append(
           h('div', { class: 'arr-head', dir: 'ltr' }, h('span', { class: 'arr-type strong', text: p.label })),
           h('div', { class: 'cells-scroll' }, cells),
@@ -2056,12 +2286,12 @@ const QUESTIONS = [
       draw();
       return wrap;
     }
-    const isChar = p.type === 'char';
-    const inp = h('input', { class: 'var-in', type: 'text', dir: 'ltr', value: vals[pi], inputmode: isChar ? null : 'numeric', maxlength: isChar ? '1' : '4', 'aria-label': `ערך עבור ${p.label}` });
+    const ed = EDIT[p.type];
+    const inp = h('input', { class: 'var-in t-' + p.type, type: 'text', dir: 'ltr', value: vals[pi], inputmode: ed.mode, maxlength: ed.max, 'aria-label': `ערך עבור ${p.label}` });
     inp.addEventListener('input', () => { vals[pi] = inp.value; });
     inp.addEventListener('focus', () => inp.select());
     return h('div', { class: 'var var-edit' },
-      h('div', { class: 'var-val', dir: 'ltr' }, isChar ? h('span', { class: 'q', text: "'" }) : null, inp, isChar ? h('span', { class: 'q', text: "'" }) : null),
+      h('div', { class: 'var-val', dir: 'ltr' }, ed.q ? h('span', { class: 'q', text: ed.q }) : null, inp, ed.q ? h('span', { class: 'q', text: ed.q }) : null),
       h('div', { class: 'var-stem', 'aria-hidden': 'true' }),
       h('div', { class: 'var-box', dir: 'ltr', text: p.label }));
   }
@@ -2155,6 +2385,11 @@ const QUESTIONS = [
   // ---------- בדיקה ----------
   const jsShow = x => Array.isArray(x) ? '{' + x.map(y => typeof y === 'string' ? `'${y}'` : y).join(', ') + '}' : typeof x === 'string' ? `'${x}'` : String(x);
 
+  function sameVal(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => sameVal(x, b[i]));
+    if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) < 1e-9;
+    return a === b;
+  }
   function runTests(q, prog, mainRes) {
     const results = [];
     const sig = q.signature;
@@ -2185,13 +2420,14 @@ const QUESTIONS = [
           results.push(e ? { ok: false, text: t.name, detail: e } : { ok: true, text: t.name });
         } else {
           const got = call(...t.args);
-          const label = `${match.name}(${t.args.map(jsShow).join(', ')})`;
-          if (JSON.stringify(got) === JSON.stringify(t.expect)) results.push({ ok: true, text: `${label} מחזירה ${jsShow(t.expect)}` });
-          else results.push({ ok: false, text: `${label} צריכה להחזיר ${jsShow(t.expect)}`, detail: `אבל החזירה ${got === null ? 'null' : jsShow(got)}` });
+          const show = (x, ty) => x === null ? 'null' : fmtVal(x, ty);
+          const label = `${match.name}(${t.args.map((a, i) => show(a, match.params[i].type)).join(', ')})`;
+          if (sameVal(got, t.expect)) results.push({ ok: true, text: `${label} מחזירה ${show(t.expect, match.ret)}` });
+          else results.push({ ok: false, text: `${label} צריכה להחזיר ${show(t.expect, match.ret)}`, detail: `אבל החזירה ${show(got, match.ret)}` });
         }
       } catch (e) {
         if (!(e instanceof CSharp.CSError)) throw e;
-        results.push({ ok: false, text: t.name || `בדיקה עם ${(t.args || []).map(jsShow).join(', ')}`, detail: `שגיאה בשורה ${e.line}: ${e.message}` });
+        results.push({ ok: false, text: t.name || `בדיקה עם ${(t.args || []).map((a, i) => fmtVal(a, match.params[i].type)).join(', ')}`, detail: `שגיאה בשורה ${e.line}: ${e.message}` });
       }
     }
     return results;
